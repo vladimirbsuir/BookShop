@@ -2,10 +2,8 @@ package com.example.bookshop.service;
 
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.BookRepository;
-import java.util.List;
-import java.util.NoSuchElementException;
-
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 /** Class to store business logic of the app. */
@@ -37,7 +35,7 @@ public class BookService {
     /** Function that updates info about book. */
     public Book update(Long id, Book book) {
         if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("Book not found");
+            throw new EntityNotFoundException("Book not found");
         }
         book.setId(id);
         return bookRepository.save(book);

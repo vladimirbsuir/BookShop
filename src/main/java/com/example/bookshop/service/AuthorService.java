@@ -2,10 +2,8 @@ package com.example.bookshop.service;
 
 import com.example.bookshop.model.Author;
 import com.example.bookshop.repository.AuthorRepository;
-import java.util.List;
-import java.util.NoSuchElementException;
-
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 /** Class to store business logic of the app. */
@@ -37,7 +35,7 @@ public class AuthorService {
     /** Function that updates info about author with certain id. */
     public Author update(Long id, Author author) {
         if (!authorRepository.existsById(id)) {
-            throw new RuntimeException("Author not found");
+            throw new EntityNotFoundException("Author not found");
         }
         author.setId(id);
         return authorRepository.save(author);
