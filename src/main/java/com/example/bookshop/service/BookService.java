@@ -5,6 +5,7 @@ import com.example.bookshop.repository.BookRepository;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 /** Class to store business logic of the app. */
@@ -25,7 +26,7 @@ public class BookService {
 
     /** Function that returns book with certain id. */
     public Book findById(Long id) {
-        return bookRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Book not found"));
+        return bookRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Book not found"));
     }
 
     /** Function that saves book in database. */

@@ -5,6 +5,7 @@ import com.example.bookshop.repository.AuthorRepository;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 /** Class to store business logic of the app. */
@@ -25,7 +26,7 @@ public class AuthorService {
 
     /** Function that returns author with certain id. */
     public Author findById(Long id) {
-        return authorRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Author not found"));
+        return authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Author not found"));
     }
 
     /** Function that save author in database. */
