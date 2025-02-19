@@ -17,7 +17,6 @@ public class Author {
     private Long id;
 
     @ManyToMany(mappedBy = "authors", fetch = FetchType.LAZY)
-    //@JsonIgnoreProperties("authors")
     @JsonIgnore
     private List<Book> books;
 

@@ -9,6 +9,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
 
-    /** Function that returns books containing substring "title". */
+    /** Function that returns books containing substring "title".
+     *
+     * @param title название книги
+     * @return JSON форму объекта Book
+     * */
     List<Book> findByTitleContaining(String title);
 }

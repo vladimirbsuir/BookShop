@@ -17,22 +17,38 @@ public class AuthorService {
         this.authorRepository = authorRepository;
     }
 
-    /** Function that returns all authors in database. */
+    /** Function that returns all authors in database.
+     *
+     * @return JSON форму объекта Author
+     * */
     public List<Author> findAll() {
         return authorRepository.findAll();
     }
 
-    /** Function that returns author with certain id. */
+    /** Function that returns author with certain id.
+     *
+     * @param id идентификатор объекта в базе данных
+     * @return JSON форму объекта Author
+     * */
     public Author findById(Long id) {
         return authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Author not found"));
     }
 
-    /** Function that save author in database. */
+    /** Function that save author in database.
+     *
+     * @param author объект класса Author
+     * @return JSON форму объекта Author
+     * */
     public Author save(Author author) {
         return authorRepository.save(author);
     }
 
-    /** Function that updates info about author with certain id. */
+    /** Function that updates info about author with certain id.
+     *
+     * @param id идентификатор объекта в базе данных
+     * @param author объект класса Author
+     * @return JSON форму объекта Author
+     * */
     public Author update(Long id, Author author) {
         if (!authorRepository.existsById(id)) {
             throw new EntityNotFoundException("Author not found");
