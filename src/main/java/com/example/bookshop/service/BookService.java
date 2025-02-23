@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
-/** Class to store business logic of the app. */
 @Service
 public class BookService {
 
