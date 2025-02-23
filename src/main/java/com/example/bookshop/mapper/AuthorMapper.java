@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuthorMapper {
 
-    /** Constructor of the class. */
-    public AuthorMapper() {}
-
     /** Function to transform standard object to DTO.
      *
      * @param author object of Author class

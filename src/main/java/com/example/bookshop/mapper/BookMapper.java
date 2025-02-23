@@ -7,7 +7,6 @@ import com.example.bookshop.model.Author;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 /** Class to transform object from dto and vice versa. */
@@ -34,14 +33,14 @@ public class BookMapper {
         if (book.getAuthors() != null) {
             List<AuthorDto> authorsDto = book.getAuthors().stream()
                     .map(authorMapper::toDto)
-                    .collect(Collectors.toList());
+                    .toList();
             bookDto.setAuthors(authorsDto);
         }
 
         if (book.getReviews() != null) {
             List<ReviewDto> reviewsDto = book.getReviews().stream()
                     .map(reviewMapper::toDto)
-                    .collect(Collectors.toList());
+                    .toList();
             bookDto.setReviews(reviewsDto);
         }
 
@@ -60,14 +59,14 @@ public class BookMapper {
         if (bookDto.getAuthors() != null) {
             List<Author> authors = bookDto.getAuthors().stream()
                     .map(authorMapper::toEntity)
-                    .collect(Collectors.toList());
+                    .toList();
             book.setAuthors(authors);
         }
 
         if (bookDto.getReviews() != null) {
             List<Review> reviews = bookDto.getReviews().stream()
                     .map(reviewMapper::toEntity)
-                    .collect(Collectors.toList());
+                    .toList();
             book.setReviews(reviews);
         }
 

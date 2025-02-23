@@ -5,7 +5,6 @@ import com.example.bookshop.mapper.ReviewMapper;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.service.ReviewService;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,6 +71,6 @@ public class ReviewController {
         List<Review> reviews = reviewService.getReviewsByBookId(bookId);
         return reviews.stream()
                 .map(reviewMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
