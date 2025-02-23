@@ -1,6 +1,5 @@
 package com.example.bookshop.controller;
 
-import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.service.ReviewService;
 import java.util.List;
