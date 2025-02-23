@@ -8,7 +8,6 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /** Class to store business logic of the app. */
 @Service
@@ -51,25 +50,23 @@ public class BookService {
      * @return JSON форму объекта Book
      * */
     public Book save(Book book) {
-        // Проверяем авторов книги
+
         if (book.getAuthors() != null) {
-            List<Author> managedAuthors = new ArrayList<>();
+            List<Author> savedAuthors = new ArrayList<>();
             for (Author author : book.getAuthors()) {
-                // Если у автора есть ID, проверяем, существует ли он в базе
+
                 if (author.getId() != null) {
                     Author existingAuthor = authorRepository.findById(author.getId())
                             .orElseThrow(() -> new EntityNotFoundException("Author not found"));
-                    managedAuthors.add(existingAuthor); // Используем существующего автора
+                    savedAuthors.add(existingAuthor);
                 } else {
-                    // Если автора с таким ID нет, сохраняем нового
-                    managedAuthors.add(authorRepository.save(author));
+                    savedAuthors.add(authorRepository.save(author));
                 }
             }
-            // Устанавливаем управляемых авторов для книги
-            book.setAuthors(managedAuthors);
+
+            book.setAuthors(savedAuthors);
         }
 
-        // Сохраняем книгу
         return bookRepository.save(book);
     }
 
@@ -79,7 +76,6 @@ public class BookService {
      * @param book объект класса Book
      * @return JSON форму объекта Book
      * */
-    //@Transactional
     public Book update(Long id, Book book) {
         if (!bookRepository.existsById(id)) {
             throw new EntityNotFoundException("Book not found");
