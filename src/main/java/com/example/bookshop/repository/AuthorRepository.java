@@ -7,4 +7,10 @@ import org.springframework.stereotype.Repository;
 /** Class that represents database containing authors. **/
 @Repository
 public interface AuthorRepository extends JpaRepository<Author, Long> {
+    /** Function to find author bi name.
+     *
+     * @param name - name of the author
+     * @return object of class Author
+     */
+    Author findByName(String name);
 }
