@@ -16,8 +16,8 @@ public class ReviewService {
 
     /** Constructor of the class.
      *
-     * @param reviewRepository - object of the ReviewRepository class
-     * @param bookService - object of the BookRepository class
+     * @param reviewRepository object of the ReviewRepository class
+     * @param bookService object of the BookRepository class
      */
     public ReviewService(ReviewRepository reviewRepository, BookService bookService) {
         this.reviewRepository = reviewRepository;
@@ -26,8 +26,8 @@ public class ReviewService {
 
     /** Function to add review to the book.
      *
-     * @param bookId - id of the book
-     * @param review - object of the Review class
+     * @param bookId id of the book
+     * @param review object of the Review class
      * @return created review
      */
     public Review createReview(Long bookId, Review review) {
@@ -42,8 +42,8 @@ public class ReviewService {
 
     /** Function to update review of the book.
      *
-     * @param id - id of the review
-     * @param review - object of the Review class
+     * @param id id of the review
+     * @param review object of the Review class
      * @return updated review
      */
     public Review updateReview(Integer id, Review review) {
@@ -57,7 +57,7 @@ public class ReviewService {
 
     /** Function to delete review.
      *
-     * @param reviewId - id of the review
+     * @param reviewId id of the review
      */
     public void deleteReview(Integer reviewId) {
         reviewRepository.deleteById(reviewId);
@@ -65,7 +65,7 @@ public class ReviewService {
 
     /** Function to get all reviews of the book.
      *
-     * @param bookId - id of the book
+     * @param bookId id of the book
      * @return reviews of the book
      */
     public List<Review> getReviewsByBookId(Long bookId) {

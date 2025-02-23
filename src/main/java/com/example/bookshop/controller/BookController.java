@@ -1,8 +1,11 @@
 package com.example.bookshop.controller;
 
+import com.example.bookshop.dto.BookDto;
+import com.example.bookshop.mapper.BookMapper;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
 /** Class that control requests and delegate logic to other classes. **/
 @RestController
 @RequestMapping("/books")
@@ -22,9 +24,12 @@ public class BookController {
     /** Variable to save BookService object. */
     private final BookService bookService;
 
+    private final BookMapper bookMapper;
+
     /** Constructor that sets bookService variable. */
-    public BookController(BookService bookService) {
+    public BookController(BookService bookService, BookMapper bookMapper) {
         this.bookService = bookService;
+        this.bookMapper = bookMapper;
     }
 
     /**
@@ -34,8 +39,11 @@ public class BookController {
      * @return JSON форму объекта Book
      * */
     @GetMapping
-    public List<Book> getBooks(@RequestParam(required = false) String title) {
-        return bookService.findByTitleContaining(title);
+    public List<BookDto> getBooks(@RequestParam(required = false) String title) {
+        List<Book> books = bookService.findByTitleContaining(title);
+        return books.stream()
+                .map(bookMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -45,8 +53,9 @@ public class BookController {
      * @return JSON форму объекта Book
      * */
     @GetMapping("/{id}")
-    public Book getBookById(@PathVariable Long id) {
-        return bookService.findById(id);
+    public BookDto getBookById(@PathVariable Long id) {
+        Book book = bookService.findById(id);
+        return bookMapper.toDto(book);
     }
 
     /**

@@ -11,7 +11,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     /** Function to get all reviews of the book.
      *
-     * @param bookId - id of the book
+     * @param bookId id of the book
      * @return reviews of the book
      */
     List<Review> findByBookId(Long bookId);

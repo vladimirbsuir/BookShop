@@ -1,8 +1,10 @@
 package com.example.bookshop.service;
 
 import com.example.bookshop.model.Author;
+import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.AuthorRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -11,18 +13,12 @@ import org.springframework.stereotype.Service;
 public class AuthorService {
 
     private final AuthorRepository authorRepository;
+    private final BookService bookService;
 
     /** Constructor to set authorRepository variable. */
-    public AuthorService(AuthorRepository authorRepository) {
+    public AuthorService(AuthorRepository authorRepository, BookService bookService) {
         this.authorRepository = authorRepository;
-    }
-
-    /** Function that returns all authors in database.
-     *
-     * @return JSON форму объекта Author
-     * */
-    public List<Author> findAll() {
-        return authorRepository.findAll();
+        this.bookService = bookService;
     }
 
     /** Function that returns author with certain id.
@@ -39,7 +35,21 @@ public class AuthorService {
      * @param author объект класса Author
      * @return JSON форму объекта Author
      * */
-    public Author save(Author author) {
+    public Author save(Author author, Long bookId) {
+        Book book = bookService.findById(bookId);
+
+        if (book == null) {
+            throw new EntityNotFoundException("Book not found");
+        }
+
+        List<Author> authors = book.getAuthors();
+        authors.add(author);
+        book.setAuthors(authors);
+
+        List<Book> newBooks = new ArrayList<>();
+        newBooks.add(book);
+        author.setBooks(newBooks);
+
         return authorRepository.save(author);
     }
 
