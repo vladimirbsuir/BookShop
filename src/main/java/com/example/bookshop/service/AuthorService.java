@@ -3,6 +3,7 @@ package com.example.bookshop.service;
 import com.example.bookshop.model.Author;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.AuthorRepository;
+import com.example.bookshop.repository.BookRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +15,13 @@ public class AuthorService {
 
     private final AuthorRepository authorRepository;
     private final BookService bookService;
+    private final BookRepository bookRepository;
 
     /** Constructor to set authorRepository variable. */
-    public AuthorService(AuthorRepository authorRepository, BookService bookService) {
+    public AuthorService(AuthorRepository authorRepository, BookService bookService, BookRepository bookRepository) {
         this.authorRepository = authorRepository;
         this.bookService = bookService;
+        this.bookRepository = bookRepository;
     }
 
     /** Function that returns author with certain id.
@@ -26,8 +29,27 @@ public class AuthorService {
      * @param id идентификатор объекта в базе данных
      * @return JSON форму объекта Author
      * */
-    public Author findById(Long id) {
-        return authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Author not found"));
+    public Author findById(Long id, Long bookId) {
+        if (!bookRepository.existsById(bookId)) {
+            throw new EntityNotFoundException("Book not found");
+        }
+
+        Book book = bookService.findById(bookId);
+        List<Author> authors = book.getAuthors();
+        Author author = authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Author not found"));
+        if (authors.contains(author)) {
+            return author;
+        } else {
+            throw new EntityNotFoundException("Author not found");
+        }
+    }
+
+    /** Function to get all authors from database.
+     *
+     * @return list pf authors
+     */
+    public List<Author> findAllAuthors() {
+        return authorRepository.findAll();
     }
 
     /** Function that save author in database.
@@ -36,19 +58,27 @@ public class AuthorService {
      * @return JSON форму объекта Author
      * */
     public Author save(Author author, Long bookId) {
+
         Book book = bookService.findById(bookId);
 
         if (book == null) {
             throw new EntityNotFoundException("Book not found");
         }
 
-        List<Author> authors = book.getAuthors();
-        authors.add(author);
-        book.setAuthors(authors);
-
         List<Book> newBooks = new ArrayList<>();
-        newBooks.add(book);
-        author.setBooks(newBooks);
+
+        if (authorRepository.existsByName(author.getName())) {
+            author = authorRepository.findByName(author.getName());
+            newBooks = author.getBooks();
+        }
+
+        List<Author> authors = book.getAuthors();
+        if (!authors.contains(author)) {
+            authors.add(author);
+            book.setAuthors(authors);
+            newBooks.add(book);
+            author.setBooks(newBooks);
+        }
 
         return authorRepository.save(author);
     }
@@ -68,7 +98,24 @@ public class AuthorService {
     }
 
     /** Function that deletes author with certain id. */
-    public void delete(Long id) {
-        authorRepository.deleteById(id);
+    public void delete(Long id, Long bookId) {
+
+        Book book = bookService.findById(bookId);
+        List<Author> authors = book.getAuthors();
+        Author author = findById(id, bookId);
+
+        authors.remove(author);
+
+        book.setAuthors(authors);
+        bookService.update(bookId, book);
+
+        List<Book> books = author.getBooks();
+        books.remove(book);
+        if (books.isEmpty()) {
+            authorRepository.delete(author);
+        } else {
+            author.setBooks(books);
+            update(id, author);
+        }
     }
 }

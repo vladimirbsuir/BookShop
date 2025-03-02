@@ -2,6 +2,7 @@ package com.example.bookshop.controller;
 
 import com.example.bookshop.model.Author;
 import com.example.bookshop.service.AuthorService;
+import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,8 +52,8 @@ public class AuthorController {
      * @param authorId id of the author
      */
     @DeleteMapping("/{authorId}")
-    public void deleteReview(@PathVariable Long authorId) {
-        authorService.delete(authorId);
+    public void deleteAuthor(@PathVariable Long authorId, @PathVariable Long bookId) {
+        authorService.delete(authorId, bookId);
     }
 
     /** Function to get author of the book.
@@ -61,7 +62,16 @@ public class AuthorController {
      * @return author of the book
      */
     @GetMapping("/{authorId}")
-    public Author findByBookId(@PathVariable Long authorId) {
-        return authorService.findById(authorId);
+    public Author findByBookId(@PathVariable Long authorId, @PathVariable Long bookId) {
+        return authorService.findById(authorId, bookId);
+    }
+
+    /** Function to get all authors from database.
+     *
+     * @return list of authors
+     */
+    @GetMapping("/all")
+    public List<Author> findAllAuthors() {
+        return authorService.findAllAuthors();
     }
 }

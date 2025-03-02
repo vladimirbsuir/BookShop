@@ -20,6 +20,8 @@ public class Author {
     @JsonIgnoreProperties({"authors", "reviews"})
     private List<Book> books;
 
+    private String name;
+
     public String getName() {
         return name;
     }
@@ -43,6 +45,4 @@ public class Author {
     public void setId(Long id) {
         this.id = id;
     }
-
-    private String name;
 }

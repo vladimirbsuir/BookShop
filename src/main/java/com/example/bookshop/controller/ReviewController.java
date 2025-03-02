@@ -61,6 +61,15 @@ public class ReviewController {
         reviewService.deleteReview(reviewId);
     }
 
+    /** Function to get all reviews from database.
+     *
+     * @return list of reviews
+     */
+    @GetMapping("/all")
+    public List<Review> findAllReviews() {
+        return reviewService.findAllReviews();
+    }
+
     /** Function to get all reviews of the book.
      *
      * @param bookId - id of the book

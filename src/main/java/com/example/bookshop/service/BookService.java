@@ -2,6 +2,7 @@ package com.example.bookshop.service;
 
 import com.example.bookshop.model.Author;
 import com.example.bookshop.model.Book;
+import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -35,6 +36,14 @@ public class BookService {
         return bookRepository.findByTitleContaining(title);
     }
 
+    /** Function to get all books from database.
+     *
+     * @return all books in database
+     */
+    public List<Book> findAllBooks() {
+        return bookRepository.findAll();
+    }
+
     /** Function that returns book with certain id.
      *
      * @param id идентификатор книги в базе данных
@@ -53,11 +62,11 @@ public class BookService {
 
         if (book.getAuthors() != null) {
             List<Author> savedAuthors = new ArrayList<>();
+
             for (Author author : book.getAuthors()) {
 
-                if (author.getId() != null) {
-                    Author existingAuthor = authorRepository.findById(author.getId())
-                            .orElseThrow(() -> new EntityNotFoundException("Author not found"));
+                if (authorRepository.existsByName(author.getName())) {
+                    Author existingAuthor = authorRepository.findByName(author.getName());
                     savedAuthors.add(existingAuthor);
                 } else {
                     savedAuthors.add(authorRepository.save(author));
@@ -65,6 +74,10 @@ public class BookService {
             }
 
             book.setAuthors(savedAuthors);
+        }
+
+        for (Review review : book.getReviews()) {
+            review.setBook(book);
         }
 
         return bookRepository.save(book);

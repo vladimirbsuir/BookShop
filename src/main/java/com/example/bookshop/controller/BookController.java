@@ -45,6 +45,18 @@ public class BookController {
                 .toList();
     }
 
+    /** Function to get all books from database.
+     *
+     * @return JSON objects of all books
+     */
+    @GetMapping("/all")
+    public List<BookDto> getAllBooks() {
+        List<Book> books = bookService.findAllBooks();
+        return books.stream()
+                .map(bookMapper::toDto)
+                .toList();
+    }
+
     /**
      * Function that holds Get request and returns book with certain id.
      *

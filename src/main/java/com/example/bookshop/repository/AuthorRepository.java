@@ -13,4 +13,11 @@ public interface AuthorRepository extends JpaRepository<Author, Long> {
      * @return object of class Author
      */
     Author findByName(String name);
+
+    /** Function to check existence of object in database by name.
+     *
+     * @param name name pf the author
+     * @return true if author exists, false otherwise
+     */
+    boolean existsByName(String name);
 }

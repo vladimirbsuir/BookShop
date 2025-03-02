@@ -69,6 +69,15 @@ public class ReviewService {
      * @return reviews of the book
      */
     public List<Review> getReviewsByBookId(Long bookId) {
+
         return reviewRepository.findByBookId(bookId);
+    }
+
+    /** Function to get all reviews from database.
+     *
+     * @return list of reviews
+     */
+    public List<Review> findAllReviews() {
+        return reviewRepository.findAll();
     }
 }
