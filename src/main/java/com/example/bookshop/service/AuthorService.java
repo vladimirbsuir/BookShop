@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthorService {
 
+    private static final String ERROR_MESSAGE = "Author not found";
+
     private final AuthorRepository authorRepository;
     private final BookService bookService;
     private final BookRepository bookRepository;
@@ -36,11 +38,11 @@ public class AuthorService {
 
         Book book = bookService.findById(bookId);
         List<Author> authors = book.getAuthors();
-        Author author = authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Author not found"));
+        Author author = authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(ERROR_MESSAGE));
         if (authors.contains(author)) {
             return author;
         } else {
-            throw new EntityNotFoundException("Author not found");
+            throw new EntityNotFoundException(ERROR_MESSAGE);
         }
     }
 
@@ -91,7 +93,7 @@ public class AuthorService {
      * */
     public Author update(Long id, Author author) {
         if (!authorRepository.existsById(id)) {
-            throw new EntityNotFoundException("Author not found");
+            throw new EntityNotFoundException(ERROR_MESSAGE);
         }
         author.setId(id);
         return authorRepository.save(author);
