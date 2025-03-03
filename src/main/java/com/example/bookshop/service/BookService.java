@@ -93,6 +93,10 @@ public class BookService {
         if (!bookRepository.existsById(id)) {
             throw new EntityNotFoundException("Book not found");
         }
+
+        Book existsBook = findById(id);
+        book.setAuthors(existsBook.getAuthors());
+
         book.setId(id);
         return bookRepository.save(book);
     }
