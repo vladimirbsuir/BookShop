@@ -9,11 +9,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import java.util.List;
 
 /** Class that represents book. */
 @Entity
+@NamedEntityGraph(
+        name = "Book",
+        attributeNodes = {
+          @NamedAttributeNode("authors"),
+          @NamedAttributeNode("reviews")
+        }
+)
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

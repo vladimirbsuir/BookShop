@@ -2,9 +2,11 @@ package com.example.bookshop.service;
 
 import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
+import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.repository.ReviewRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 
 /** Class that make CRUD operations with Review object. */
@@ -13,15 +15,22 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final BookService bookService;
+    private final Map<Long, List<Review>> reviewCacheId;
+    private final BookRepository bookRepository;
+    private final Map<Long, Book> bookCacheId;
 
     /** Constructor of the class.
      *
      * @param reviewRepository object of the ReviewRepository class
      * @param bookService object of the BookRepository class
      */
-    public ReviewService(ReviewRepository reviewRepository, BookService bookService) {
+    public ReviewService(ReviewRepository reviewRepository, BookService bookService, Map<Long, List<Review>> reviewCacheId,
+                         BookRepository bookRepository, Map<Long, Book> bookCacheId) {
         this.reviewRepository = reviewRepository;
         this.bookService = bookService;
+        this.reviewCacheId = reviewCacheId;
+        this.bookRepository = bookRepository;
+        this.bookCacheId = bookCacheId;
     }
 
     /** Function to add review to the book.
@@ -31,36 +40,94 @@ public class ReviewService {
      * @return created review
      */
     public Review createReview(Long bookId, Review review) {
-        Book book = bookService.findById(bookId);
-        if (book == null) {
-            throw new EntityNotFoundException("Book not found");
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book not found"));
+        review.setBook(book);
+
+        Book cacheBook = bookCacheId.get(bookId);
+        if (cacheBook != null) {
+            List<Review> reviews = cacheBook.getReviews();
+            reviews.add(review);
+            cacheBook.setReviews(reviews);
+            bookCacheId.put(bookId, cacheBook);
         }
 
-        review.setBook(book);
-        return reviewRepository.save(review);
+        Review rev = reviewRepository.save(review);
+
+        if (reviewCacheId.containsKey(bookId)) {
+            List<Review> reviews = reviewCacheId.get(bookId);
+            reviews.add(rev);
+            reviewCacheId.put(bookId, reviews);
+        }
+
+        return rev;
     }
 
     /** Function to update review of the book.
      *
-     * @param id id of the review
+     * @param reviewId id of the review
      * @param review object of the Review class
+     * @param bookId id of the book
      * @return updated review
      */
-    public Review updateReview(Integer id, Review review) {
-        if (!reviewRepository.existsById(id)) {
-            throw new EntityNotFoundException("Book not found");
+    public Review updateReview(Integer reviewId, Review review, Long bookId) {
+        Book book = bookService.findById(bookId);
+        if (book == null) {
+            book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book not found"));
         }
-        Review initialReview = reviewRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Review not found"));
-        initialReview.setMessage(review.getMessage());
-        return reviewRepository.save(initialReview);
+
+        List<Review> reviews = book.getReviews();
+        Review initialReview = reviewRepository.findById(reviewId).orElseThrow(() -> new EntityNotFoundException("Review not found"));
+        for (Review r : reviews) {
+            if (r.getId().equals(Long.valueOf(reviewId))) {
+                initialReview.setMessage(review.getMessage());
+                Review updatedReview = reviewRepository.save(initialReview);
+
+                List<Review> cachedReviews = reviewCacheId.get(bookId);
+                if (cachedReviews != null) {
+                    cachedReviews.removeIf(rev -> rev.getId().equals(Long.valueOf(reviewId)));
+                    cachedReviews.add(updatedReview);
+                    reviewCacheId.put(bookId, cachedReviews);
+                }
+
+                Book cachedBook = bookCacheId.get(bookId);
+                if (cachedBook != null) {
+                    if (cachedReviews == null) {
+                        cachedReviews = cachedBook.getReviews();
+                        cachedReviews.removeIf(rev -> rev.getId().equals(Long.valueOf(reviewId)));
+                        cachedReviews.add(updatedReview);
+                    }
+                    cachedBook.setReviews(cachedReviews);
+                    bookCacheId.put(bookId, cachedBook);
+                }
+
+                return updatedReview;
+            }
+        }
+
+        throw new EntityNotFoundException("Review not found");
     }
 
     /** Function to delete review.
      *
      * @param reviewId id of the review
      */
-    public void deleteReview(Integer reviewId) {
+    public void deleteReview(Integer reviewId, Long bookId) {
         reviewRepository.deleteById(reviewId);
+        List<Review> reviews = reviewCacheId.get(bookId);
+        if (reviews != null) {
+            reviews.removeIf(rev -> rev.getId().equals(Long.valueOf(reviewId)));
+            reviewCacheId.put(bookId, reviews);
+        }
+
+        Book book = bookCacheId.get(bookId);
+        if (book != null) {
+            if (reviews == null) {
+                reviews = book.getReviews();
+                reviews.removeIf(rev -> rev.getId().equals(Long.valueOf(reviewId)));
+            }
+            book.setReviews(reviews);
+            bookCacheId.put(bookId, book);
+        }
     }
 
     /** Function to get all reviews of the book.
@@ -69,8 +136,16 @@ public class ReviewService {
      * @return reviews of the book
      */
     public List<Review> getReviewsByBookId(Long bookId) {
+        List<Review> reviews = reviewCacheId.get(bookId);
+        if (reviews != null) {
+            System.out.println("Reviews was got from cache");
+            return reviews;
+        }
 
-        return reviewRepository.findByBookId(bookId);
+        reviews = reviewRepository.findByBookId(bookId);
+        reviewCacheId.put(bookId, reviews);
+
+        return reviews;
     }
 
     /** Function to get all reviews from database.

@@ -38,11 +38,9 @@ public class BookController {
      * @return JSON форму объекта Book
      * */
     @GetMapping
-    public List<BookDto> getBooks(@RequestParam(required = false) String title) {
-        List<Book> books = bookService.findByTitleContaining(title);
-        return books.stream()
-                .map(bookMapper::toDto)
-                .toList();
+    public BookDto getBooks(@RequestParam(required = false) String title) {
+        Book books = bookService.findByTitle(title);
+        return bookMapper.toDto(books);
     }
 
     /** Function to get all books from database.
@@ -67,6 +65,18 @@ public class BookController {
     public BookDto getBookById(@PathVariable Long id) {
         Book book = bookService.findById(id);
         return bookMapper.toDto(book);
+    }
+
+    /** Function to get books with specified author.
+     *
+     * @param authorName name of the author
+     * @return list of the books with specified author
+     */
+    @GetMapping("/find")
+    public List<BookDto> getBooksByAuthorName(@RequestParam(required = false) String authorName) {
+        return bookService.findByAuthorName(authorName).stream()
+                .map(bookMapper::toDto)
+                .toList();
     }
 
     /**

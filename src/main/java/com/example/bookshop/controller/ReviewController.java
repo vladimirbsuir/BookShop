@@ -48,8 +48,8 @@ public class ReviewController {
      * @return updated review
      */
     @PutMapping("/{reviewId}")
-    public Review updateReview(@PathVariable Integer reviewId, @RequestBody Review review) {
-        return reviewService.updateReview(reviewId, review);
+    public Review updateReview(@PathVariable Integer reviewId, @RequestBody Review review, @PathVariable Long bookId) {
+        return reviewService.updateReview(reviewId, review, bookId);
     }
 
     /** Function to delete review.
@@ -57,8 +57,8 @@ public class ReviewController {
      * @param reviewId - id of the review
      */
     @DeleteMapping("/{reviewId}")
-    public void deleteReview(@PathVariable Integer reviewId) {
-        reviewService.deleteReview(reviewId);
+    public void deleteReview(@PathVariable Integer reviewId, @PathVariable Long bookId) {
+        reviewService.deleteReview(reviewId, bookId);
     }
 
     /** Function to get all reviews from database.

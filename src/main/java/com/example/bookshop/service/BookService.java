@@ -8,6 +8,7 @@ import com.example.bookshop.repository.BookRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 
 /** Class to store business logic of the app. */
@@ -16,15 +17,22 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
+    private final Map<Long, Book> bookCacheId;
+    private final Map<Long, List<Review>> reviewCacheId;
+    private final Map<Long, Author> authorCacheId;
 
     /**
      * Constructor to set bookRepository variable.
      *
      * @param bookRepository объект класса BookRepository
      * */
-    public BookService(BookRepository bookRepository, AuthorRepository authorRepository) {
+    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, Map<Long, Book> bookCacheId,
+                       Map<Long, List<Review>> reviewCacheId, Map<Long, Author> authorCacheId) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
+        this.bookCacheId = bookCacheId;
+        this.reviewCacheId = reviewCacheId;
+        this.authorCacheId = authorCacheId;
     }
 
     /** Function that returns books which contains substring "title".
@@ -32,8 +40,8 @@ public class BookService {
      * @param title название книги
      * @return JSON форму объекта Book
      * */
-    public List<Book> findByTitleContaining(String title) {
-        return bookRepository.findByTitleContaining(title);
+    public Book findByTitle(String title) {
+        return bookRepository.findByTitle(title);
     }
 
     /** Function to get all books from database.
@@ -50,7 +58,25 @@ public class BookService {
      * @return JSON форму объекта Book
      * */
     public Book findById(Long id) {
-        return bookRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Book not found"));
+        Book cachedBook = bookCacheId.get(id);
+        if (cachedBook != null) {
+            System.out.println("Book was got from cache");
+            return cachedBook;
+        }
+
+        Book book = bookRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Book not found"));
+        bookCacheId.put(id, book);
+
+        return book;
+    }
+
+    /** Function that returns books with specified author.
+     *
+     * @param authorName name of the author
+     * @return list of books with specified author
+     */
+    public List<Book> findByAuthorName(String authorName) {
+        return bookRepository.findByAuthorName(authorName);
     }
 
     /** Function that saves book in database.
@@ -59,7 +85,6 @@ public class BookService {
      * @return JSON форму объекта Book
      * */
     public Book save(Book book) {
-
         if (book.getAuthors() != null) {
             List<Author> savedAuthors = new ArrayList<>();
 
@@ -76,8 +101,10 @@ public class BookService {
             book.setAuthors(savedAuthors);
         }
 
-        for (Review review : book.getReviews()) {
-            review.setBook(book);
+        if (book.getReviews() != null) {
+            for (Review review : book.getReviews()) {
+                review.setBook(book);
+            }
         }
 
         return bookRepository.save(book);
@@ -96,9 +123,17 @@ public class BookService {
 
         Book existsBook = findById(id);
         book.setAuthors(existsBook.getAuthors());
+        book.setReviews(existsBook.getReviews());
 
         book.setId(id);
-        return bookRepository.save(book);
+
+        Book updatedBook = bookRepository.save(book);
+        if (bookCacheId.containsKey(id)) {
+            System.out.println("Book was updated in cache");
+            bookCacheId.put(id, updatedBook);
+        }
+
+        return updatedBook;
     }
 
     /**
@@ -107,6 +142,18 @@ public class BookService {
      * @param id идентификатор объекта в базе данных
      * */
     public void delete(Long id) {
+        reviewCacheId.remove(id);
+        bookCacheId.remove(id);
+        authorCacheId.clear();
         bookRepository.deleteById(id);
+    }
+
+    /** Function to clear book cache. */
+    public void clearCache() {
+        bookCacheId.clear();
+    }
+
+    public Map<Long, Book> getBookCacheId() {
+        return bookCacheId;
     }
 }
