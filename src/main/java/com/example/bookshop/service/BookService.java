@@ -60,7 +60,6 @@ public class BookService {
     public Book findById(Long id) {
         Book cachedBook = bookCacheId.get(id);
         if (cachedBook != null) {
-            System.out.println("Book was got from cache");
             return cachedBook;
         }
 
@@ -129,7 +128,6 @@ public class BookService {
 
         Book updatedBook = bookRepository.save(book);
         if (bookCacheId.containsKey(id)) {
-            System.out.println("Book was updated in cache");
             bookCacheId.put(id, updatedBook);
         }
 

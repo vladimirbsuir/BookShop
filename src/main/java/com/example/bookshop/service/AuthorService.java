@@ -49,8 +49,6 @@ public class AuthorService {
         if (author == null) {
             author = authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(ERROR_MESSAGE));
             authorCacheId.put(id, author);
-        } else {
-            System.out.println("Author was got from cache");
         }
 
         for (Author a : authors) {
@@ -108,10 +106,8 @@ public class AuthorService {
      * @return JSON форму объекта Author
      * */
     public Author update(Long id, Author author) {
-        if (!authorCacheId.containsKey(id)) {
-            if (!authorRepository.existsById(id)) {
-                throw new EntityNotFoundException(ERROR_MESSAGE);
-            }
+        if (!authorCacheId.containsKey(id) && !authorRepository.existsById(id)) {
+            throw new EntityNotFoundException(ERROR_MESSAGE);
         }
 
         author.setId(id);

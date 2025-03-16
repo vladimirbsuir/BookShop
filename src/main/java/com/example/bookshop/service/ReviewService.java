@@ -138,7 +138,6 @@ public class ReviewService {
     public List<Review> getReviewsByBookId(Long bookId) {
         List<Review> reviews = reviewCacheId.get(bookId);
         if (reviews != null) {
-            System.out.println("Reviews was got from cache");
             return reviews;
         }
 
