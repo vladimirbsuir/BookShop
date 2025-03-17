@@ -78,6 +78,15 @@ public class BookService {
         return bookRepository.findByAuthorName(authorName);
     }
 
+    /** Function to get books with amount of reviews greater than reviewCount.
+     *
+     * @param reviewCount amount of reviews
+     * @return list of books
+     */
+    public List<Book> findByReviewCount(Long reviewCount) {
+        return bookRepository.findByReviewCount(reviewCount);
+    }
+
     /** Function that saves book in database.
      *
      * @param book объек класса Book

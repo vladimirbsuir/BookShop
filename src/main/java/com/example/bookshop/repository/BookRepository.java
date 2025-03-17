@@ -35,4 +35,12 @@ public interface BookRepository extends JpaRepository<Book, Long> {
      */
     @Query("SELECT book FROM Book book JOIN book.authors author WHERE author.name = :authorName")
     List<Book> findByAuthorName(@Param("authorName") String authorName);
+
+    /** Function with custom query to get books with amount of reviews greater than reviewCount.
+     *
+     * @param reviewCount amount of reviews
+     * @return list of books
+     */
+    @Query("SELECT book FROM Book book JOIN book.reviews review GROUP BY book HAVING COUNT(review) > :reviewCount")
+    List<Book> findByReviewCount(@Param("reviewCount") Long reviewCount);
 }

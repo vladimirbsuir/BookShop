@@ -79,6 +79,18 @@ public class BookController {
                 .toList();
     }
 
+    /** Function to get books with review amount greater than reviewCount.
+     *
+     * @param reviewCount amount of reviews
+     * @return list of books
+     */
+    @GetMapping("/find/reviews")
+    public List<BookDto> getBooksByReviewCount(@RequestParam(required = false) Long reviewCount) {
+        return bookService.findByReviewCount(reviewCount).stream()
+                .map(bookMapper::toDto)
+                .toList();
+    }
+
     /**
      * Function that holds Post request and save book in database.
      *
