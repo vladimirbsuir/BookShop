@@ -4,6 +4,7 @@ import com.example.bookshop.model.Author;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
+import com.example.bookshop.utils.Cache;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +20,12 @@ public class AuthorService {
     private final AuthorRepository authorRepository;
     private final BookService bookService;
     private final BookRepository bookRepository;
-    private final Map<Long, Author> authorCacheId;
-    private final Map<Long, Book> bookCacheId;
+    private final Cache<Long, Author> authorCacheId;
+    private final Cache<Long, Book> bookCacheId;
 
     /** Constructor to set authorRepository variable. */
     public AuthorService(AuthorRepository authorRepository, BookService bookService, BookRepository bookRepository,
-                         Map<Long, Author> authorCacheId, Map<Long, Book> bookCacheId) {
+                         Cache<Long, Author> authorCacheId, Cache<Long, Book> bookCacheId) {
         this.authorRepository = authorRepository;
         this.bookService = bookService;
         this.bookRepository = bookRepository;
@@ -49,6 +50,8 @@ public class AuthorService {
         if (author == null) {
             author = authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(ERROR_MESSAGE));
             authorCacheId.put(id, author);
+        } else {
+            System.out.println("Author was got from cache");
         }
 
         for (Author a : authors) {

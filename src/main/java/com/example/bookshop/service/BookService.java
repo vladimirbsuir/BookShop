@@ -5,10 +5,10 @@ import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
+import com.example.bookshop.utils.Cache;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.springframework.stereotype.Service;
 
 /** Class to store business logic of the app. */
@@ -17,17 +17,17 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
-    private final Map<Long, Book> bookCacheId;
-    private final Map<Long, List<Review>> reviewCacheId;
-    private final Map<Long, Author> authorCacheId;
+    private final Cache<Long,  Book> bookCacheId;
+    private final Cache<Long, List<Review>> reviewCacheId;
+    private final Cache<Long, Author> authorCacheId;
 
     /**
      * Constructor to set bookRepository variable.
      *
      * @param bookRepository объект класса BookRepository
      * */
-    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, Map<Long, Book> bookCacheId,
-                       Map<Long, List<Review>> reviewCacheId, Map<Long, Author> authorCacheId) {
+    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, Cache<Long, Book> bookCacheId,
+                       Cache<Long, List<Review>> reviewCacheId, Cache<Long, Author> authorCacheId) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
         this.bookCacheId = bookCacheId;
@@ -60,6 +60,7 @@ public class BookService {
     public Book findById(Long id) {
         Book cachedBook = bookCacheId.get(id);
         if (cachedBook != null) {
+            System.out.println("Book was got from cache");
             return cachedBook;
         }
 
@@ -158,9 +159,5 @@ public class BookService {
     /** Function to clear book cache. */
     public void clearCache() {
         bookCacheId.clear();
-    }
-
-    public Map<Long, Book> getBookCacheId() {
-        return bookCacheId;
     }
 }
