@@ -5,7 +5,7 @@ import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
-import com.example.bookshop.utils.Cache;
+import com.example.bookshop.utils.CacheUtil;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,17 +17,17 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
-    private final Cache<Long,  Book> bookCacheId;
-    private final Cache<Long, List<Review>> reviewCacheId;
-    private final Cache<Long, Author> authorCacheId;
+    private final CacheUtil<Long,  Book> bookCacheId;
+    private final CacheUtil<Long, List<Review>> reviewCacheId;
+    private final CacheUtil<Long, Author> authorCacheId;
 
     /**
      * Constructor to set bookRepository variable.
      *
      * @param bookRepository объект класса BookRepository
      * */
-    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, Cache<Long, Book> bookCacheId,
-                       Cache<Long, List<Review>> reviewCacheId, Cache<Long, Author> authorCacheId) {
+    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, CacheUtil<Long, Book> bookCacheId,
+                       CacheUtil<Long, List<Review>> reviewCacheId, CacheUtil<Long, Author> authorCacheId) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
         this.bookCacheId = bookCacheId;

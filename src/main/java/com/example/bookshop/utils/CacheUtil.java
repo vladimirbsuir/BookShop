@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 /** Class to store cache. */
-public class Cache<K, V> {
+public class CacheUtil<K, V> {
     private final LinkedHashMap<K, V> cache;
     private final int maxSize;
 
@@ -13,7 +13,7 @@ public class Cache<K, V> {
      *
      * @param maxSize max capacity of the cache
      */
-    public Cache(int maxSize) {
+    public CacheUtil(int maxSize) {
         this.cache = new LinkedHashMap<K, V>(maxSize, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {

@@ -4,7 +4,7 @@ import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.repository.ReviewRepository;
-import com.example.bookshop.utils.Cache;
+import com.example.bookshop.utils.CacheUtil;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -15,17 +15,17 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final BookService bookService;
-    private final Cache<Long, List<Review>> reviewCacheId;
+    private final CacheUtil<Long, List<Review>> reviewCacheId;
     private final BookRepository bookRepository;
-    private final Cache<Long, Book> bookCacheId;
+    private final CacheUtil<Long, Book> bookCacheId;
 
     /** Constructor of the class.
      *
      * @param reviewRepository object of the ReviewRepository class
      * @param bookService object of the BookRepository class
      */
-    public ReviewService(ReviewRepository reviewRepository, BookService bookService, Cache<Long, List<Review>> reviewCacheId,
-                         BookRepository bookRepository, Cache<Long, Book> bookCacheId) {
+    public ReviewService(ReviewRepository reviewRepository, BookService bookService, CacheUtil<Long, List<Review>> reviewCacheId,
+                         BookRepository bookRepository, CacheUtil<Long, Book> bookCacheId) {
         this.reviewRepository = reviewRepository;
         this.bookService = bookService;
         this.reviewCacheId = reviewCacheId;
