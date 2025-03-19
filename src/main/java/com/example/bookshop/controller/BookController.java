@@ -4,7 +4,12 @@ import com.example.bookshop.dto.BookDto;
 import com.example.bookshop.mapper.BookMapper;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import java.util.List;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 /** Class that control requests and delegate logic to other classes. **/
 @RestController
 @RequestMapping("/books")
+@Validated
+@Tag(name = "BookShop API", description = "CRUD operations for books ")
 public class BookController {
 
     /** Variable to save BookService object. */
@@ -37,6 +44,7 @@ public class BookController {
      * @param title название книги
      * @return JSON форму объекта Book
      * */
+    @Operation(summary = "Get books", description = "Returns book with specified title")
     @GetMapping
     public BookDto getBooks(@RequestParam(required = false) String title) {
         Book books = bookService.findByTitle(title);
@@ -47,6 +55,7 @@ public class BookController {
      *
      * @return JSON objects of all books
      */
+    @Operation(summary = "Get books", description = "Returns all books existing in app")
     @GetMapping("/all")
     public List<BookDto> getAllBooks() {
         List<Book> books = bookService.findAllBooks();
@@ -61,8 +70,9 @@ public class BookController {
      * @param id идентификатор объекта в базе данных
      * @return JSON форму объекта Book
      * */
+    @Operation(summary = "Get book", description = "Returns book with specified id")
     @GetMapping("/{id}")
-    public BookDto getBookById(@PathVariable Long id) {
+    public BookDto getBookById(@PathVariable @Min(1) Long id) {
         Book book = bookService.findById(id);
         return bookMapper.toDto(book);
     }
@@ -72,6 +82,7 @@ public class BookController {
      * @param authorName name of the author
      * @return list of the books with specified author
      */
+    @Operation(summary = "Get books", description = "Returns books that have specified author")
     @GetMapping("/find")
     public List<BookDto> getBooksByAuthorName(@RequestParam(required = false) String authorName) {
         return bookService.findByAuthorName(authorName).stream()
@@ -84,8 +95,9 @@ public class BookController {
      * @param reviewCount amount of reviews
      * @return list of books
      */
+    @Operation(summary = "Get books", description = "Returns books filtered by amount of reviews")
     @GetMapping("/find/reviews")
-    public List<BookDto> getBooksByReviewCount(@RequestParam(required = false) Long reviewCount) {
+    public List<BookDto> getBooksByReviewCount(@RequestParam(required = false) @Min(0) Long reviewCount) {
         return bookService.findByReviewCount(reviewCount).stream()
                 .map(bookMapper::toDto)
                 .toList();
@@ -97,8 +109,9 @@ public class BookController {
      * @param book JSON форма объекта
      * @return JSON форму объекта Book
      * */
+    @Operation(summary = "Create book", description = "Create new book")
     @PostMapping
-    public Book createBook(@RequestBody Book book) {
+    public Book createBook(@Valid @RequestBody Book book) {
         return bookService.save(book);
     }
 
@@ -109,8 +122,9 @@ public class BookController {
      * @param book JSON форма объекта
      * @return JSON форму объекта Book
      * */
+    @Operation(summary = "Update existing book", description = "Updates book by new title")
     @PutMapping("/{id}")
-    public Book updateBook(@PathVariable Long id, @RequestBody Book book) {
+    public Book updateBook(@PathVariable @Min(1) Long id, @Valid @RequestBody Book book) {
         return bookService.update(id, book);
     }
 
@@ -118,8 +132,9 @@ public class BookController {
      *
      * @param id идентификатор объекта в базе данных
      * */
+    @Operation(summary = "Delete book", description = "Deletes book with specified id")
     @DeleteMapping("/{id}")
-    public void deleteBook(@PathVariable Long id) {
+    public void deleteBook(@PathVariable @Min(1) Long id) {
         bookService.delete(id);
     }
 }

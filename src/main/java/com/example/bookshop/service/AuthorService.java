@@ -1,11 +1,11 @@
 package com.example.bookshop.service;
 
+import com.example.bookshop.exception.ResourceNotFoundException;
 import com.example.bookshop.model.Author;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.utils.CacheUtil;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,14 +41,14 @@ public class AuthorService {
      * */
     public Author findById(Long id, Long bookId) {
         if (!bookRepository.existsById(bookId)) {
-            throw new EntityNotFoundException("Book not found");
+            throw new ResourceNotFoundException("Book not found");
         }
 
         Book book = bookService.findById(bookId);
         List<Author> authors = book.getAuthors();
         Author author = authorCacheId.get(id);
         if (author == null) {
-            author = authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(ERROR_MESSAGE));
+            author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(ERROR_MESSAGE));
             authorCacheId.put(id, author);
         } else {
             System.out.println("Author was got from cache");
@@ -60,7 +60,7 @@ public class AuthorService {
             }
         }
 
-        throw new EntityNotFoundException(ERROR_MESSAGE);
+        throw new ResourceNotFoundException(ERROR_MESSAGE);
     }
 
     /** Function to get all authors from database.
@@ -81,7 +81,7 @@ public class AuthorService {
         Book book = bookService.findById(bookId);
 
         if (book == null) {
-            throw new EntityNotFoundException("Book not found");
+            throw new ResourceNotFoundException("Book not found");
         }
 
         List<Book> newBooks = new ArrayList<>();
@@ -110,7 +110,7 @@ public class AuthorService {
      * */
     public Author update(Long id, Author author) {
         if (!authorCacheId.containsKey(id) && !authorRepository.existsById(id)) {
-            throw new EntityNotFoundException(ERROR_MESSAGE);
+            throw new ResourceNotFoundException(ERROR_MESSAGE);
         }
 
         author.setId(id);

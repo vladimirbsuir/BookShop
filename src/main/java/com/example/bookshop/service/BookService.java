@@ -1,12 +1,12 @@
 package com.example.bookshop.service;
 
+import com.example.bookshop.exception.ResourceNotFoundException;
 import com.example.bookshop.model.Author;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.utils.CacheUtil;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -64,7 +64,7 @@ public class BookService {
             return cachedBook;
         }
 
-        Book book = bookRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Book not found"));
+        Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
         bookCacheId.put(id, book);
 
         return book;
@@ -127,7 +127,7 @@ public class BookService {
      * */
     public Book update(Long id, Book book) {
         if (!bookRepository.existsById(id)) {
-            throw new EntityNotFoundException("Book not found");
+            throw new ResourceNotFoundException("Book not found");
         }
 
         Book existsBook = findById(id);

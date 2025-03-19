@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /** Class to store info about review. */
 @Entity
@@ -17,6 +19,8 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Message shouldn't be empty")
+    @Size(max = 400, message = "Max 400 characters for review")
     private String message;
 
     @ManyToOne(fetch = FetchType.LAZY)

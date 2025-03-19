@@ -1,5 +1,7 @@
 package com.example.bookshop.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 /** Class that represents data transfer object of the Review. */
 public class ReviewDto {
     private String message;

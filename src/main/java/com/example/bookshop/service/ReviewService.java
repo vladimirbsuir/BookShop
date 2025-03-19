@@ -1,11 +1,11 @@
 package com.example.bookshop.service;
 
+import com.example.bookshop.exception.ResourceNotFoundException;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.repository.ReviewRepository;
 import com.example.bookshop.utils.CacheUtil;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +40,7 @@ public class ReviewService {
      * @return created review
      */
     public Review createReview(Long bookId, Review review) {
-        Book book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book not found"));
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
         review.setBook(book);
 
         Book cachedBook = bookCacheId.get(bookId);
@@ -66,11 +66,11 @@ public class ReviewService {
     public Review updateReview(Integer reviewId, Review review, Long bookId) {
         Book book = bookService.findById(bookId);
         if (book == null) {
-            book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book not found"));
+            book = bookRepository.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
         }
 
         List<Review> reviews = book.getReviews();
-        Review initialReview = reviewRepository.findById(reviewId).orElseThrow(() -> new EntityNotFoundException("Review not found"));
+        Review initialReview = reviewRepository.findById(reviewId).orElseThrow(() -> new ResourceNotFoundException("Review not found"));
         for (Review r : reviews) {
             if (r.getId().equals(Long.valueOf(reviewId))) {
                 initialReview.setMessage(review.getMessage());
@@ -98,7 +98,7 @@ public class ReviewService {
             }
         }
 
-        throw new EntityNotFoundException("Review not found");
+        throw new ResourceNotFoundException("Review not found");
     }
 
     /** Function to delete review.
