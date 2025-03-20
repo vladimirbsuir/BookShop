@@ -1,7 +1,5 @@
 package com.example.bookshop.dto;
 
-import jakarta.validation.constraints.NotBlank;
-
 import java.util.List;
 
 /** Class that represents data transfer object of the Book. */

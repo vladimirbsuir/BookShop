@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/** Class to handle logs requests. */
 @RestController
 @RequestMapping("/logs")
 @Tag(name = "BookShop API", description = "Operations with .log file")
@@ -29,6 +30,7 @@ public class LogController {
 
     private static final String LOG_FILE_PATH = "app.log";
 
+    /** Function to return .log file with logs for specified date. */
     @Operation(summary = "Get .log file", description = "Returns .log file with logs from specified date")
     @GetMapping("/get-logs")
     public ResponseEntity<Resource> downloadLogs(@RequestParam String date) throws IOException {

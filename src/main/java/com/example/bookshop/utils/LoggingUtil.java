@@ -9,24 +9,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+/** Class to create logs. */
 @Aspect
 @Component
 public class LoggingUtil {
 
     private final Logger logger = LoggerFactory.getLogger(LoggingUtil.class);
 
+    /** Function to create logs before method execution. */
     @Before("execution(* com.example.bookshop..*(..))")
     public void logBefore(JoinPoint joinPoint) {
-        logger.info("Executing: " + joinPoint.getSignature().toShortString());
+        logger.info("Executing: {}", joinPoint.getSignature().toShortString());
     }
 
+    /** Function to create logs after method execution. */
     @AfterReturning(pointcut = "execution(* com.example.bookshop..*(..))", returning = "result")
     public void logAfterReturning(JoinPoint joinPoint, Object result) {
-        logger.info("Executed: " + joinPoint.getSignature().toShortString() + " with result: " + result);
+        logger.info("Executed: {} with result: {}", joinPoint.getSignature().toShortString(), result);
     }
 
+    /** Function to create logs after exception throwing. */
     @AfterThrowing(pointcut = "execution(* com.example.bookshop..*(..))", throwing = "error")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable error) {
-        logger.error("Exception in: " + joinPoint.getSignature().toShortString() + " with cause: " + error.getMessage());
+        logger.error("Exception in: {} with cause: {}", joinPoint.getSignature().toShortString(), error.getMessage());
     }
 }
