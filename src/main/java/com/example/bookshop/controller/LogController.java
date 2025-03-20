@@ -2,14 +2,18 @@ package com.example.bookshop.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Set;
+import org.apache.commons.lang3.SystemUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -33,7 +37,7 @@ public class LogController {
     /** Function to return .log file with logs for specified date. */
     @Operation(summary = "Get .log file", description = "Returns .log file with logs from specified date")
     @GetMapping("/get-logs")
-    public ResponseEntity<Resource> downloadLogs(@RequestParam String date) throws IOException {
+    public ResponseEntity<Resource> downloadLogs(@RequestParam String date) {
 
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -55,6 +59,19 @@ public class LogController {
             }
 
             Path logFile = Files.createTempFile("logs-" + logDate, ".log");
+
+            if (SystemUtils.IS_OS_UNIX) {
+                Files.setPosixFilePermissions(logFile, Set.of(
+                        PosixFilePermission.OWNER_READ,
+                        PosixFilePermission.OWNER_WRITE
+                ));
+            } else {
+                File f = logFile.toFile();  // Compliant
+                f.setReadable(true, true);
+                f.setWritable(true, true);
+                f.setExecutable(true, true);
+            }
+
             Files.write(logFile, currentLogs);
 
             Resource resource = new UrlResource(logFile.toUri());
