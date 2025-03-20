@@ -7,12 +7,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -58,19 +62,8 @@ public class LogController {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There are no logs for specified date: " + date);
             }
 
-            Path logFile = Files.createTempFile("logs-" + logDate, ".log");
-
-            if (SystemUtils.IS_OS_UNIX) {
-                Files.setPosixFilePermissions(logFile, Set.of(
-                        PosixFilePermission.OWNER_READ,
-                        PosixFilePermission.OWNER_WRITE
-                ));
-            } else {
-                File f = logFile.toFile();  // Compliant
-                f.setReadable(true, true);
-                f.setWritable(true, true);
-                f.setExecutable(true, true);
-            }
+            FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
+            Path logFile = Files.createTempFile("logs-" + logDate, ".log", attr);
 
             Files.write(logFile, currentLogs);
 
