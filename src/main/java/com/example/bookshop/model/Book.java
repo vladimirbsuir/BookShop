@@ -1,5 +1,6 @@
 package com.example.bookshop.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,24 +26,30 @@ import java.util.List;
           @NamedAttributeNode("reviews")
         }
 )
+@Schema(description = "Model of the book")
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Identifier of the book", example = "1")
     private Long id;
 
     @NotBlank(message = "Title shouldn't be empty")
     @Size(max = 100, message = "Max 100 characters for title")
+    @Schema(description = "Title of the book", example = "Java")
     private String title;
 
-    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH},
+            fetch = FetchType.LAZY)
     @JoinTable(
             name = "book_author",
             joinColumns = @JoinColumn(name = "book_id"),
             inverseJoinColumns = @JoinColumn(name = "author_id")
     )
+    @Schema(description = "List of the authors of the book")
     private List<Author> authors;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Schema(description = "List of the reviews of the book")
     private List<Review> reviews;
 
     public List<Author> getAuthors() {

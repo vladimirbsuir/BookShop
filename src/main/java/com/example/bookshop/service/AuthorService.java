@@ -9,6 +9,7 @@ import com.example.bookshop.utils.CacheUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /** Class to store business logic of the app. */
@@ -41,17 +42,16 @@ public class AuthorService {
      * */
     public Author findById(Long id, Long bookId) {
         if (!bookRepository.existsById(bookId)) {
-            throw new ResourceNotFoundException("Book not found");
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found");
         }
 
         Book book = bookService.findById(bookId);
         List<Author> authors = book.getAuthors();
         Author author = authorCacheId.get(id);
         if (author == null) {
-            author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(ERROR_MESSAGE));
+            author = authorRepository.findById(id).orElseThrow(
+                    () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE));
             authorCacheId.put(id, author);
-        } else {
-            System.out.println("Author was got from cache");
         }
 
         for (Author a : authors) {
@@ -60,7 +60,7 @@ public class AuthorService {
             }
         }
 
-        throw new ResourceNotFoundException(ERROR_MESSAGE);
+        throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE);
     }
 
     /** Function to get all authors from database.
@@ -81,7 +81,7 @@ public class AuthorService {
         Book book = bookService.findById(bookId);
 
         if (book == null) {
-            throw new ResourceNotFoundException("Book not found");
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found");
         }
 
         List<Book> newBooks = new ArrayList<>();
@@ -110,7 +110,7 @@ public class AuthorService {
      * */
     public Author update(Long id, Author author) {
         if (!authorCacheId.containsKey(id) && !authorRepository.existsById(id)) {
-            throw new ResourceNotFoundException(ERROR_MESSAGE);
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE);
         }
 
         author.setId(id);

@@ -7,7 +7,6 @@ import java.util.Set;
 /** Class to store cache. */
 public class CacheUtil<K, V> {
     private final LinkedHashMap<K, V> cache;
-    private final int maxSize;
 
     /** Constructor to create Cache object.
      *
@@ -20,7 +19,6 @@ public class CacheUtil<K, V> {
                 return size() > maxSize;
             }
         };
-        this.maxSize = maxSize;
     }
 
     /** Function to get object from cache by key.

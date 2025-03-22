@@ -1,6 +1,7 @@
 package com.example.bookshop.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -13,19 +14,23 @@ import jakarta.validation.constraints.Size;
 
 /** Class to store info about review. */
 @Entity
+@Schema(description = "Model of the review")
 public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Identifier of the review", example = "1")
     private Long id;
 
     @NotBlank(message = "Message shouldn't be empty")
     @Size(max = 400, message = "Max 400 characters for review")
+    @Schema(description = "Text of the review", example = "Interesting book")
     private String message;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id")
     @JsonIgnore
+    @Schema(description = "Book review belongs to")
     private Book book;
 
     public Long getId() {

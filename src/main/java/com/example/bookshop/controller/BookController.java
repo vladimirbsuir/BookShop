@@ -5,6 +5,10 @@ import com.example.bookshop.mapper.BookMapper;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -24,12 +28,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/books")
 @Validated
-@Tag(name = "BookShop API", description = "CRUD operations for books ")
+@Tag(name = "Book requests", description = "CRUD operations for books ")
 public class BookController {
 
-    /** Variable to save BookService object. */
     private final BookService bookService;
-
     private final BookMapper bookMapper;
 
     /** Constructor that sets bookService variable. */
@@ -38,15 +40,22 @@ public class BookController {
         this.bookMapper = bookMapper;
     }
 
-    /**
-     * Function to get books with title containing substring.
+    /**Function to get books with title containing substring.
      *
-     * @param title название книги
-     * @return JSON форму объекта Book
+     * @param title title of the book
+     * @return JSON object of Book
      * */
-    @Operation(summary = "Get books", description = "Returns book with specified title")
+    @Operation(summary = "Get books", description = "Returns book with specified title",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Get book by title"),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @GetMapping
-    public BookDto getBooks(@RequestParam(required = false) String title) {
+    public BookDto getBooks(@Parameter(description = "Title of the book", example = "Java")
+                                @RequestParam(required = false) String title) {
         Book books = bookService.findByTitle(title);
         return bookMapper.toDto(books);
     }
@@ -55,7 +64,14 @@ public class BookController {
      *
      * @return JSON objects of all books
      */
-    @Operation(summary = "Get books", description = "Returns all books existing in app")
+    @Operation(summary = "Get books", description = "Returns all books existing in app",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Get all books"),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @GetMapping("/all")
     public List<BookDto> getAllBooks() {
         List<Book> books = bookService.findAllBooks();
@@ -64,15 +80,26 @@ public class BookController {
                 .toList();
     }
 
-    /**
-     * Function that holds Get request and returns book with certain id.
+    /**Function that holds Get request and returns book with certain id.
      *
-     * @param id идентификатор объекта в базе данных
-     * @return JSON форму объекта Book
+     * @param id id of the book
+     * @return JSON object of Book
      * */
-    @Operation(summary = "Get book", description = "Returns book with specified id")
+    @Operation(summary = "Get book", description = "Returns book with specified id",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Get book by id"),
+                @ApiResponse(responseCode = "404", description =
+                            "Book not found",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Book not found\" }"))),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @GetMapping("/{id}")
-    public BookDto getBookById(@PathVariable @Min(1) Long id) {
+    public BookDto getBookById(@Parameter(description = "Id of the book", example = "1", required = true)
+                                   @PathVariable @Min(1) Long id) {
         Book book = bookService.findById(id);
         return bookMapper.toDto(book);
     }
@@ -82,9 +109,17 @@ public class BookController {
      * @param authorName name of the author
      * @return list of the books with specified author
      */
-    @Operation(summary = "Get books", description = "Returns books that have specified author")
+    @Operation(summary = "Get books", description = "Returns books that have specified author",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Get books by author name"),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @GetMapping("/find")
-    public List<BookDto> getBooksByAuthorName(@RequestParam(required = false) String authorName) {
+    public List<BookDto> getBooksByAuthorName(@Parameter(description = "Name of the author", example = "Joshua Bloch")
+                                                  @RequestParam(required = false) String authorName) {
         return bookService.findByAuthorName(authorName).stream()
                 .map(bookMapper::toDto)
                 .toList();
@@ -95,36 +130,61 @@ public class BookController {
      * @param reviewCount amount of reviews
      * @return list of books
      */
-    @Operation(summary = "Get books", description = "Returns books filtered by amount of reviews")
+    @Operation(summary = "Get books", description = "Returns books filtered by amount of reviews",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Get books by amount of reviews"),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @GetMapping("/find/reviews")
-    public List<BookDto> getBooksByReviewCount(@RequestParam(required = false) @Min(0) Long reviewCount) {
+    public List<BookDto> getBooksByReviewCount(@Parameter(description = "Amount of reviews", example = "3")
+                                                   @RequestParam(required = false) @Min(0) Long reviewCount) {
         return bookService.findByReviewCount(reviewCount).stream()
                 .map(bookMapper::toDto)
                 .toList();
     }
 
-    /**
-     * Function that holds Post request and save book in database.
+    /** Function to create new book.
      *
-     * @param book JSON форма объекта
-     * @return JSON форму объекта Book
+     * @param book JSON object of Book
+     * @return JSON object of Book
      * */
-    @Operation(summary = "Create book", description = "Create new book")
+    @Operation(summary = "Create book", description = "Create new book",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Book was created"),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @PostMapping
     public Book createBook(@Valid @RequestBody Book book) {
         return bookService.save(book);
     }
 
-    /**
-     * Function that holds Put request and updates book with certain id.
+    /** Function that holds Put request and updates book with certain id.
      *
-     * @param id идентификатор объекта в базе данных
-     * @param book JSON форма объекта
-     * @return JSON форму объекта Book
+     * @param id id of the book
+     * @param book JSON object of Book
+     * @return JSON object of Book
      * */
-    @Operation(summary = "Update existing book", description = "Updates book by new title")
+    @Operation(summary = "Update existing book", description = "Updates book by new title",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Book was updated"),
+                @ApiResponse(responseCode = "404", description =
+                            "Book not found",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Book not found\" }"))),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @PutMapping("/{id}")
-    public Book updateBook(@PathVariable @Min(1) Long id, @Valid @RequestBody Book book) {
+    public Book updateBook(@Parameter(description = "id of the book", example = "1", required = true)
+                               @PathVariable @Min(1) Long id, @Valid @RequestBody Book book) {
         return bookService.update(id, book);
     }
 
@@ -132,9 +192,21 @@ public class BookController {
      *
      * @param id идентификатор объекта в базе данных
      * */
-    @Operation(summary = "Delete book", description = "Deletes book with specified id")
+    @Operation(summary = "Delete book", description = "Deletes book with specified id",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Book was deleted"),
+                @ApiResponse(responseCode = "404", description =
+                            "Book not found",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Book not found\" }"))),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @DeleteMapping("/{id}")
-    public void deleteBook(@PathVariable @Min(1) Long id) {
+    public void deleteBook(@Parameter(description = "id of the book", example = "1", required = true)
+                               @PathVariable @Min(1) Long id) {
         bookService.delete(id);
     }
 }

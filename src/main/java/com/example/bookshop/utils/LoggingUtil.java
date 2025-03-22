@@ -28,7 +28,8 @@ public class LoggingUtil {
     @AfterReturning(pointcut = "execution(* com.example.bookshop..*(..))", returning = "result")
     public void logAfterReturning(JoinPoint joinPoint, Object result) {
         if (logger.isInfoEnabled()) {
-            logger.info("Executed: {} with result: {}", joinPoint.getSignature().toShortString(), result);
+            logger.info("Executed: {} with result: {}",
+                    joinPoint.getSignature().toShortString(), result);
         }
     }
 
@@ -36,7 +37,8 @@ public class LoggingUtil {
     @AfterThrowing(pointcut = "execution(* com.example.bookshop..*(..))", throwing = "error")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable error) {
         if (logger.isErrorEnabled()) {
-            logger.error("Exception in: {} with cause: {}", joinPoint.getSignature().toShortString(), error.getMessage());
+            logger.error("Exception in: {} with cause: {}",
+                    joinPoint.getSignature().toShortString(), error.getMessage());
         }
     }
 }

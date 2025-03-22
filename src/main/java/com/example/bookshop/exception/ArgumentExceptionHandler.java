@@ -13,21 +13,16 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 /** Class to handle argument exceptions. */
 @ControllerAdvice
-public class ArgumentExceptionHandler {
-
-    private static final String STATUS = "status";
-    private static final String TIME = "time";
-    private static final String MESSAGE = "message";
-    private static final String ERROR = "error";
+public class ArgumentExceptionHandler implements IExceptionHandler {
 
     /** Function to handle incorrect method arguments exceptions. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
         Map<String, Object> body = new HashMap<>();
-        body.put(TIME, new Date());
-        body.put(STATUS, HttpStatus.UNPROCESSABLE_ENTITY.value());
-        body.put(ERROR, "Validation error");
-        body.put(MESSAGE, e.getBindingResult().getFieldErrors().stream()
+        body.put("time", new Date());
+        body.put("status", HttpStatus.UNPROCESSABLE_ENTITY.value());
+        body.put("error", "Validation error");
+        body.put("message", e.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .toList());
         return new ResponseEntity<>(body, HttpStatus.UNPROCESSABLE_ENTITY);
@@ -36,22 +31,21 @@ public class ArgumentExceptionHandler {
     /** Function to handle incorrect argument types. */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
-        Map<String, Object> body = new HashMap<>();
-        body.put(TIME, new Date());
-        body.put(STATUS, HttpStatus.BAD_REQUEST.value());
-        body.put(ERROR, "Invalid parameter type");
-        body.put(MESSAGE, "Invalid value for parameter: " + e.getName() + ". Expected type: " + e.getRequiredType().getSimpleName());
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        String message = "Invalid value for parameter: " + e.getName()
+                + ". Expected type: " + e.getRequiredType().getSimpleName();
+        return createException(new InvalidValueTypeException(HttpStatus.BAD_REQUEST,
+                "Invalid parameter type"), message);
     }
 
     /** Function to handle constraint violation types. */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException e) {
-        Map<String, Object> body = new HashMap<>();
-        body.put(TIME, new Date());
-        body.put(STATUS, HttpStatus.BAD_REQUEST.value());
-        body.put(ERROR, "Invalid parameter value");
-        body.put(MESSAGE, e.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        return createException(HttpStatus.BAD_REQUEST, "Invalid parameter value", e.getMessage());
+    }
+
+    /** Function to handle constraint violation types. */
+    @ExceptionHandler(InvalidValueFormatException.class)
+    public ResponseEntity<Object> handleInvalidValueFormat(InvalidValueFormatException e) {
+        return createException(e, "Invalid value format");
     }
 }

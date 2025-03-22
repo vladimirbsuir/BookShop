@@ -7,6 +7,7 @@ import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.repository.ReviewRepository;
 import com.example.bookshop.utils.CacheUtil;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /** Class that make CRUD operations with Review object. */
@@ -24,7 +25,8 @@ public class ReviewService {
      * @param reviewRepository object of the ReviewRepository class
      * @param bookService object of the BookRepository class
      */
-    public ReviewService(ReviewRepository reviewRepository, BookService bookService, CacheUtil<Long, List<Review>> reviewCacheId,
+    public ReviewService(ReviewRepository reviewRepository, BookService bookService,
+                         CacheUtil<Long, List<Review>> reviewCacheId,
                          BookRepository bookRepository, CacheUtil<Long, Book> bookCacheId) {
         this.reviewRepository = reviewRepository;
         this.bookService = bookService;
@@ -40,7 +42,8 @@ public class ReviewService {
      * @return created review
      */
     public Review createReview(Long bookId, Review review) {
-        Book book = bookRepository.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found"));
         review.setBook(book);
 
         Book cachedBook = bookCacheId.get(bookId);
@@ -66,11 +69,13 @@ public class ReviewService {
     public Review updateReview(Integer reviewId, Review review, Long bookId) {
         Book book = bookService.findById(bookId);
         if (book == null) {
-            book = bookRepository.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+            book = bookRepository.findById(bookId)
+                    .orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found"));
         }
 
         List<Review> reviews = book.getReviews();
-        Review initialReview = reviewRepository.findById(reviewId).orElseThrow(() -> new ResourceNotFoundException("Review not found"));
+        Review initialReview = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Review not found"));
         for (Review r : reviews) {
             if (r.getId().equals(Long.valueOf(reviewId))) {
                 initialReview.setMessage(review.getMessage());
@@ -98,7 +103,7 @@ public class ReviewService {
             }
         }
 
-        throw new ResourceNotFoundException("Review not found");
+        throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Review not found");
     }
 
     /** Function to delete review.
@@ -132,7 +137,6 @@ public class ReviewService {
     public List<Review> getReviewsByBookId(Long bookId) {
         List<Review> reviews = reviewCacheId.get(bookId);
         if (reviews != null) {
-            System.out.println("Reviews was got from cache");
             return reviews;
         }
 

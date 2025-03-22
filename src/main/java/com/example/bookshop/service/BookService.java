@@ -9,6 +9,7 @@ import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.utils.CacheUtil;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /** Class to store business logic of the app. */
@@ -26,8 +27,10 @@ public class BookService {
      *
      * @param bookRepository объект класса BookRepository
      * */
-    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, CacheUtil<Long, Book> bookCacheId,
-                       CacheUtil<Long, List<Review>> reviewCacheId, CacheUtil<Long, Author> authorCacheId) {
+    public BookService(BookRepository bookRepository, AuthorRepository authorRepository,
+                       CacheUtil<Long, Book> bookCacheId,
+                       CacheUtil<Long, List<Review>> reviewCacheId,
+                       CacheUtil<Long, Author> authorCacheId) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
         this.bookCacheId = bookCacheId;
@@ -60,11 +63,11 @@ public class BookService {
     public Book findById(Long id) {
         Book cachedBook = bookCacheId.get(id);
         if (cachedBook != null) {
-            System.out.println("Book was got from cache");
             return cachedBook;
         }
 
-        Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        Book book = bookRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found"));
         bookCacheId.put(id, book);
 
         return book;
@@ -127,7 +130,7 @@ public class BookService {
      * */
     public Book update(Long id, Book book) {
         if (!bookRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Book not found");
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found");
         }
 
         Book existsBook = findById(id);

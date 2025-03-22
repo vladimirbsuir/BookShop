@@ -5,6 +5,10 @@ import com.example.bookshop.mapper.ReviewMapper;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -23,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/books/{bookId}/reviews")
 @Validated
-@Tag(name = "BookShop API", description = "CRUD operations for reviews")
+@Tag(name = "Review requests", description = "CRUD operations for reviews")
 public class ReviewController {
     private final ReviewService reviewService;
     private final ReviewMapper reviewMapper;
@@ -43,9 +47,17 @@ public class ReviewController {
      * @param review - object of the Review class
      * @return created review
      */
-    @Operation(summary = "Create review", description = "Creates new review")
+    @Operation(summary = "Create review", description = "Creates new review",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Review was created"),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @PostMapping
-    public Review createReview(@PathVariable @Min(1) Long bookId, @Valid @RequestBody Review review) {
+    public Review createReview(@Parameter(description = "id of the book", example = "1", required = true)
+                                   @PathVariable @Min(1) Long bookId, @Valid @RequestBody Review review) {
         return reviewService.createReview(bookId, review);
     }
 
@@ -55,9 +67,23 @@ public class ReviewController {
      * @param review - object of the Review class
      * @return updated review
      */
-    @Operation(summary = "Update existing review", description = "Update review with specified id")
+    @Operation(summary = "Update existing review", description = "Update review with specified id",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Review was updated"),
+                @ApiResponse(responseCode = "404", description =
+                            "Review not found",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Review not found\" }"))),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @PutMapping("/{reviewId}")
-    public Review updateReview(@PathVariable @Min(1) Integer reviewId, @Valid @RequestBody Review review, @PathVariable Long bookId) {
+    public Review updateReview(@Parameter(description = "id of the review", example = "1", required = true)
+                                   @PathVariable @Min(1) Integer reviewId, @Valid @RequestBody Review review,
+                                   @Parameter(description = "id of the book", example = "1", required = true)
+                                   @PathVariable Long bookId) {
         return reviewService.updateReview(reviewId, review, bookId);
     }
 
@@ -65,9 +91,23 @@ public class ReviewController {
      *
      * @param reviewId - id of the review
      */
-    @Operation(summary = "Delete review", description = "Delete review with specified id")
+    @Operation(summary = "Delete review", description = "Delete review with specified id",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Review was deleted"),
+                @ApiResponse(responseCode = "404", description =
+                            "Review not found",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Review not found\" }"))),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @DeleteMapping("/{reviewId}")
-    public void deleteReview(@PathVariable @Min(1) Integer reviewId, @PathVariable @Min(1) Long bookId) {
+    public void deleteReview(@Parameter(description = "id of the review", example = "1", required = true)
+                                 @PathVariable @Min(1) Integer reviewId,
+                                 @Parameter(description = "id of the book", example = "1", required = true)
+                                 @PathVariable @Min(1) Long bookId) {
         reviewService.deleteReview(reviewId, bookId);
     }
 
@@ -75,7 +115,14 @@ public class ReviewController {
      *
      * @return list of reviews
      */
-    @Operation(summary = "Get reviews", description = "Returns all reviews existing in app")
+    @Operation(summary = "Get reviews", description = "Returns all reviews existing in app",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Get all reviews"),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @GetMapping("/all")
     public List<Review> findAllReviews() {
         return reviewService.findAllReviews();
@@ -86,9 +133,22 @@ public class ReviewController {
      * @param bookId - id of the book
      * @return reviews of the book
      */
-    @Operation(summary = "Get reviews", description = "Returns all reviews from book with specified id")
+    @Operation(summary = "Get reviews", description = "Returns all reviews from book with specified id",
+            responses = {
+                @ApiResponse(responseCode = "200", description =
+                            "Get review by id"),
+                @ApiResponse(responseCode = "404", description =
+                            "Review not found",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Review not found\" }"))),
+                @ApiResponse(responseCode = "500", description =
+                            "Internal server error",
+                            content = @Content(schema = @Schema(example =
+                                    "{ \"error\": \"Internal server error\" }")))})
     @GetMapping
-    public List<ReviewDto> getReviewsByBookId(@PathVariable @Min(1) Long bookId) {
+    public List<ReviewDto> getReviewsByBookId(
+            @Parameter(description = "id of the book", example = "1", required = true)
+                                                  @PathVariable @Min(1) Long bookId) {
         List<Review> reviews = reviewService.getReviewsByBookId(bookId);
         return reviews.stream()
                 .map(reviewMapper::toDto)
