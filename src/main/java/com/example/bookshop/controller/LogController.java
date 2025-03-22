@@ -84,25 +84,9 @@ public class LogController {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "There are no logs for specified date: " + date);
             }
-
-            Path logFile;
-
-            if (SystemUtils.IS_OS_UNIX) {
-                FileAttribute<Set<PosixFilePermission>> attr =
+            FileAttribute<Set<PosixFilePermission>> attr =
                         PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
-                logFile = Files.createTempFile("logs-" + logDate, ".log", attr);
-            } else {
-                path = Files.createTempFile("logs-" + logDate, ".log");
-                File file = path.toFile();
-                if (file.setReadable(true, true)
-                        && file.setWritable(true, true)
-                        && file.setExecutable(true, true)) {
-                    logFile = path;
-                } else {
-                    throw new CreateTempFileException(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Failed to create temp file");
-                }
-            }
+            Path logFile = Files.createTempFile("logs-" + logDate, ".log", attr);
 
             Files.write(logFile, currentLogs);
 
