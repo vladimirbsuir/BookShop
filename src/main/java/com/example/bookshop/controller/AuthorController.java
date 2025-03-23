@@ -58,8 +58,21 @@ public class AuthorController {
     @PostMapping
     public Author createAuthor(@Valid @RequestBody Author author,
                                @Parameter(description = "id of the book", example = "1", required = true)
-                                    @PathVariable @Min(1) Long bookId) {
+                               @PathVariable @Min(1) Long bookId) {
         return authorService.save(author, bookId);
+    }
+
+    /** Function to save some authors for one request.
+     *
+     * @param authors list of the authors
+     * @param bookId id of the book
+     * @return list of the authors in JSON format
+     */
+    @PostMapping("/b")
+    public List<Author> createAuthors(@Valid @RequestBody List<Author> authors,
+                                      @Parameter(description = "id of the book", example = "1", required = true)
+                                      @PathVariable @Min(1) Long bookId) {
+        return authors.stream().map(author -> authorService.save(author, bookId)).toList();
     }
 
     /** Function to update author of the book.

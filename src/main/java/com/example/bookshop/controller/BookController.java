@@ -164,6 +164,16 @@ public class BookController {
         return bookService.save(book);
     }
 
+    /** Function to save some books for one request.
+     *
+     * @param books list of books
+     * @return list of the books in JSON format
+     */
+    @PostMapping("/b")
+    public List<Book> createBooks(@Valid @RequestBody List<Book> books) {
+        return books.stream().map(bookService::save).toList();
+    }
+
     /** Function that holds Put request and updates book with certain id.
      *
      * @param id id of the book

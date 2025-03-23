@@ -61,6 +61,18 @@ public class ReviewController {
         return reviewService.createReview(bookId, review);
     }
 
+    /** Function to save some reviews for one request.
+     *
+     * @param bookId id of the book
+     * @param reviews list of the reviews
+     * @return list of the reviews in JSON format
+     */
+    @PostMapping("/b")
+    public List<Review> createReviews(@Parameter(description = "id of the book", example = "1", required = true)
+                                          @PathVariable @Min(1) Long bookId, @Valid @RequestBody List<Review> reviews) {
+        return reviews.stream().map(review -> reviewService.createReview(bookId, review)).toList();
+    }
+
     /** Function to update review of the book.
      *
      * @param reviewId - id of the review
