@@ -1,8 +1,10 @@
 package com.example.bookshop.service;
 
+import com.example.bookshop.exception.CreateTempFileException;
 import com.example.bookshop.exception.FileProcessingException;
 import com.example.bookshop.exception.InvalidValueFormatException;
 import com.example.bookshop.exception.ResourceNotFoundException;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.SystemUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -57,9 +60,24 @@ public class LogService {
                         "There are no logs for specified date: " + date);
             }
 
-            FileAttribute<Set<PosixFilePermission>> attr =
+            Path logFile;
+
+            if (SystemUtils.IS_OS_UNIX) {
+                FileAttribute<Set<PosixFilePermission>> attr =
                         PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
-            Path logFile = Files.createTempFile("logs-" + logDate, ".log", attr);
+                logFile = Files.createTempFile("logs-" + logDate, ".log", attr);
+            } else {
+                path = Files.createTempFile("logs-" + logDate, ".log");
+                File file = path.toFile();
+                if (file.setReadable(true, true)
+                        && file.setWritable(true, true)
+                        && file.setExecutable(true, true)) {
+                    logFile = path;
+                } else {
+                    throw new CreateTempFileException(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Failed to create temp file");
+                }
+            }
 
             Files.write(logFile, currentLogs);
 
