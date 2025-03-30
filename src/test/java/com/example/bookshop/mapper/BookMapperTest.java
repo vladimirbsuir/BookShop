@@ -54,9 +54,9 @@ class BookMapperTest {
 
         assertEquals(book.getTitle(), dto.getTitle());
         assertEquals(1, dto.getAuthors().size());
-        assertEquals(author.getName(), dto.getAuthors().get(0).getName());
+        assertEquals(author.getName(), dto.getAuthors().getFirst().getName());
         assertEquals(1, dto.getReviews().size());
-        assertEquals(review.getMessage(), dto.getReviews().get(0).getMessage());
+        assertEquals(review.getMessage(), dto.getReviews().getFirst().getMessage());
 
         verify(authorMapper).toDto(author);
         verify(reviewMapper).toDto(review);
