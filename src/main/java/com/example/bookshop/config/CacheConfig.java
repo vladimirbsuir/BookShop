@@ -1,32 +1,27 @@
 package com.example.bookshop.config;
 
-import com.example.bookshop.model.Author;
-import com.example.bookshop.model.Book;
-import com.example.bookshop.model.Review;
-import com.example.bookshop.utils.CacheUtil;
-import java.util.List;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.TimeUnit;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /** Class to store cache. */
 @Configuration
+@EnableCaching
 public class CacheConfig {
 
-    /** Bean for book cache (requests by id). */
+    /** Function to create manager that will hold all app cache.
+     *
+     * @return object of CacheManager
+     */
     @Bean
-    public CacheUtil<Long, Book> bookCacheId() {
-        return new CacheUtil<>(20);
-    }
-
-    /** Bean for author cache (requests by id). */
-    @Bean
-    public CacheUtil<Long, Author> authorCacheId() {
-        return new CacheUtil<>(10);
-    }
-
-    /** Bean for review cache (requests by id). */
-    @Bean
-    public CacheUtil<Long, List<Review>> reviewCacheId() {
-        return new CacheUtil<>(10);
+    public CacheManager cacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.setCaffeine(Caffeine.newBuilder()
+                .maximumSize(20).expireAfterWrite(10, TimeUnit.MINUTES));
+        return cacheManager;
     }
 }

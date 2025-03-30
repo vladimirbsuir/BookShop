@@ -18,15 +18,4 @@ public class AuthorMapper {
         authorDto.setName(author.getName());
         return authorDto;
     }
-
-    /** Function to transform DTO to standard object.
-     *
-     * @param authorDto object of AuthorDto object
-     * @return standard Author object
-     */
-    public Author toEntity(AuthorDto authorDto) {
-        Author author = new Author();
-        author.setName(authorDto.getName());
-        return author;
-    }
 }

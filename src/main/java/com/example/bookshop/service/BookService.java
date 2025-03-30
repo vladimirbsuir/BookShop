@@ -6,9 +6,11 @@ import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
-import com.example.bookshop.utils.CacheUtil;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -16,26 +18,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class BookService {
 
+    private static final String BOOK_NOT_FOUND_MESSAGE = "Book not found";
+
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
-    private final CacheUtil<Long,  Book> bookCacheId;
-    private final CacheUtil<Long, List<Review>> reviewCacheId;
-    private final CacheUtil<Long, Author> authorCacheId;
 
     /**
      * Constructor to set bookRepository variable.
      *
      * @param bookRepository объект класса BookRepository
      * */
-    public BookService(BookRepository bookRepository, AuthorRepository authorRepository,
-                       CacheUtil<Long, Book> bookCacheId,
-                       CacheUtil<Long, List<Review>> reviewCacheId,
-                       CacheUtil<Long, Author> authorCacheId) {
+    public BookService(BookRepository bookRepository, AuthorRepository authorRepository) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
-        this.bookCacheId = bookCacheId;
-        this.reviewCacheId = reviewCacheId;
-        this.authorCacheId = authorCacheId;
     }
 
     /** Function that returns books which contains substring "title".
@@ -60,17 +55,10 @@ public class BookService {
      * @param id идентификатор книги в базе данных
      * @return JSON форму объекта Book
      * */
+    @Cacheable("books")
     public Book findById(Long id) {
-        Book cachedBook = bookCacheId.get(id);
-        if (cachedBook != null) {
-            return cachedBook;
-        }
-
-        Book book = bookRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found"));
-        bookCacheId.put(id, book);
-
-        return book;
+        return bookRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, BOOK_NOT_FOUND_MESSAGE));
     }
 
     /** Function that returns books with specified author.
@@ -128,23 +116,15 @@ public class BookService {
      * @param book объект класса Book
      * @return JSON форму объекта Book
      * */
+    @CachePut(value = "books", key = "#id")
     public Book update(Long id, Book book) {
-        if (!bookRepository.existsById(id)) {
-            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found");
-        }
-
-        Book existsBook = findById(id);
+        Book existsBook = bookRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, BOOK_NOT_FOUND_MESSAGE));
         book.setAuthors(existsBook.getAuthors());
         book.setReviews(existsBook.getReviews());
 
         book.setId(id);
-
-        Book updatedBook = bookRepository.save(book);
-        if (bookCacheId.containsKey(id)) {
-            bookCacheId.put(id, updatedBook);
-        }
-
-        return updatedBook;
+        return bookRepository.save(book);
     }
 
     /**
@@ -152,15 +132,8 @@ public class BookService {
      *
      * @param id идентификатор объекта в базе данных
      * */
+    @CacheEvict(value = {"books", "authors", "reviews"}, allEntries = true)
     public void delete(Long id) {
-        reviewCacheId.remove(id);
-        bookCacheId.remove(id);
-        authorCacheId.clear();
         bookRepository.deleteById(id);
-    }
-
-    /** Function to clear book cache. */
-    public void clearCache() {
-        bookCacheId.clear();
     }
 }

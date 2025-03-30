@@ -5,10 +5,11 @@ import com.example.bookshop.model.Author;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
-import com.example.bookshop.utils.CacheUtil;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -17,21 +18,17 @@ import org.springframework.stereotype.Service;
 public class AuthorService {
 
     private static final String ERROR_MESSAGE = "Author not found";
+    private static final String BOOK_NOT_FOUND_MESSAGE = "Book not found";
 
     private final AuthorRepository authorRepository;
     private final BookService bookService;
     private final BookRepository bookRepository;
-    private final CacheUtil<Long, Author> authorCacheId;
-    private final CacheUtil<Long, Book> bookCacheId;
 
     /** Constructor to set authorRepository variable. */
-    public AuthorService(AuthorRepository authorRepository, BookService bookService, BookRepository bookRepository,
-                         CacheUtil<Long, Author> authorCacheId, CacheUtil<Long, Book> bookCacheId) {
+    public AuthorService(AuthorRepository authorRepository, BookService bookService, BookRepository bookRepository) {
         this.authorRepository = authorRepository;
         this.bookService = bookService;
         this.bookRepository = bookRepository;
-        this.authorCacheId = authorCacheId;
-        this.bookCacheId = bookCacheId;
     }
 
     /** Function that returns author with certain id.
@@ -40,27 +37,18 @@ public class AuthorService {
      * @param bookId id of the book
      * @return JSON форму объекта Author
      * */
+    @Cacheable(value = "authors", key = "#id")
     public Author findById(Long id, Long bookId) {
-        if (!bookRepository.existsById(bookId)) {
-            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found");
-        }
 
-        Book book = bookService.findById(bookId);
+        Book book = bookRepository.findById(bookId).orElseThrow(
+                () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, BOOK_NOT_FOUND_MESSAGE));
         List<Author> authors = book.getAuthors();
-        Author author = authorCacheId.get(id);
-        if (author == null) {
-            author = authorRepository.findById(id).orElseThrow(
-                    () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE));
-            authorCacheId.put(id, author);
+        Author author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE));
+        if (authors.contains(author)) {
+            return author;
+        } else {
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE);
         }
-
-        for (Author a : authors) {
-            if (a.getId().equals(author.getId())) {
-                return author;
-            }
-        }
-
-        throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE);
     }
 
     /** Function to get all authors from database.
@@ -76,13 +64,10 @@ public class AuthorService {
      * @param author объект класса Author
      * @return JSON форму объекта Author
      * */
+    @CacheEvict(value = "books", allEntries = true)
     public Author save(Author author, Long bookId) {
-        bookService.clearCache();
-        Book book = bookService.findById(bookId);
-
-        if (book == null) {
-            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found");
-        }
+        Book book = bookRepository.findById(bookId).orElseThrow(
+                () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, BOOK_NOT_FOUND_MESSAGE));
 
         List<Book> newBooks = new ArrayList<>();
 
@@ -108,34 +93,31 @@ public class AuthorService {
      * @param author объект класса Author
      * @return JSON форму объекта Author
      * */
+    @Caching(evict = {
+        @CacheEvict(value = "authors", key = "#id"),
+        @CacheEvict(value = "books", allEntries = true)
+    })
     public Author update(Long id, Author author) {
-        if (!authorCacheId.containsKey(id) && !authorRepository.existsById(id)) {
+        if (!authorRepository.existsById(id)) {
             throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE);
         }
 
         author.setId(id);
-        Author updatedAuthor = authorRepository.save(author);
-        authorCacheId.clear();
-
-        for (Map.Entry<Long, Book> bookEntry : bookCacheId.entrySet()) {
-            Book book = bookEntry.getValue();
-            List<Author> authors = book.getAuthors();
-            if (authors.removeIf(auth -> auth.getId().equals(updatedAuthor.getId()))) {
-                authors.add(updatedAuthor);
-                book.setAuthors(authors);
-                bookCacheId.put(bookEntry.getKey(), book);
-            }
-        }
-
-        return updatedAuthor;
+        return authorRepository.save(author);
     }
 
     /** Function that deletes author with certain id. */
+    @Caching(evict = {
+        @CacheEvict(value = "authors", key = "#id"),
+        @CacheEvict(value = "books", allEntries = true)
+    })
     public void delete(Long id, Long bookId) {
-        bookService.clearCache();
-        Book book = bookService.findById(bookId);
+
+        Book book = bookRepository.findById(bookId).orElseThrow(
+                () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, BOOK_NOT_FOUND_MESSAGE));
         List<Author> authors = book.getAuthors();
-        Author author = findById(id, bookId);
+        Author author = authorRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE));
 
         authors.remove(author);
 
@@ -146,7 +128,6 @@ public class AuthorService {
         books.remove(book);
         if (books.isEmpty()) {
             authorRepository.delete(author);
-            authorCacheId.remove(id);
         } else {
             author.setBooks(books);
             update(id, author);

@@ -18,15 +18,4 @@ public class ReviewMapper {
         reviewDto.setMessage(review.getMessage());
         return reviewDto;
     }
-
-    /** Function to transform DTO to standard object.
-     *
-     * @param reviewDto object of ReviewDto class
-     * @return standard Review object
-     */
-    public Review toEntity(ReviewDto reviewDto) {
-        Review review = new Review();
-        review.setMessage(reviewDto.getMessage());
-        return review;
-    }
 }

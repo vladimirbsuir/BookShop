@@ -5,8 +5,9 @@ import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.repository.ReviewRepository;
-import com.example.bookshop.utils.CacheUtil;
 import java.util.List;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -14,25 +15,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReviewService {
 
+    private static final String ERROR_MESSAGE = "Book not found";
+
     private final ReviewRepository reviewRepository;
-    private final BookService bookService;
-    private final CacheUtil<Long, List<Review>> reviewCacheId;
     private final BookRepository bookRepository;
-    private final CacheUtil<Long, Book> bookCacheId;
 
     /** Constructor of the class.
      *
      * @param reviewRepository object of the ReviewRepository class
-     * @param bookService object of the BookRepository class
      */
-    public ReviewService(ReviewRepository reviewRepository, BookService bookService,
-                         CacheUtil<Long, List<Review>> reviewCacheId,
-                         BookRepository bookRepository, CacheUtil<Long, Book> bookCacheId) {
+    public ReviewService(ReviewRepository reviewRepository,
+                         BookRepository bookRepository) {
         this.reviewRepository = reviewRepository;
-        this.bookService = bookService;
-        this.reviewCacheId = reviewCacheId;
         this.bookRepository = bookRepository;
-        this.bookCacheId = bookCacheId;
     }
 
     /** Function to add review to the book.
@@ -41,21 +36,12 @@ public class ReviewService {
      * @param review object of the Review class
      * @return created review
      */
+    @CacheEvict(value = {"reviews", "books"}, key = "#bookId")
     public Review createReview(Long bookId, Review review) {
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE));
+
         review.setBook(book);
-
-        Book cachedBook = bookCacheId.get(bookId);
-        if (cachedBook != null) {
-            List<Review> reviews = cachedBook.getReviews();
-            reviews.add(review);
-            cachedBook.setReviews(reviews);
-            bookCacheId.put(bookId, cachedBook);
-        }
-
-        reviewCacheId.clear();
-
         return reviewRepository.save(review);
     }
 
@@ -66,67 +52,28 @@ public class ReviewService {
      * @param bookId id of the book
      * @return updated review
      */
+    @CacheEvict(value = {"reviews", "books"}, key = "#bookId")
     public Review updateReview(Integer reviewId, Review review, Long bookId) {
-        Book book = bookService.findById(bookId);
-        if (book == null) {
-            book = bookRepository.findById(bookId)
-                    .orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Book not found"));
+        if (!bookRepository.existsById(bookId)) {
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE);
         }
 
-        List<Review> reviews = book.getReviews();
         Review initialReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Review not found"));
-        for (Review r : reviews) {
-            if (r.getId().equals(Long.valueOf(reviewId))) {
-                initialReview.setMessage(review.getMessage());
-                Review updatedReview = reviewRepository.save(initialReview);
-
-                List<Review> cachedReviews = reviewCacheId.get(bookId);
-                if (cachedReviews != null) {
-                    cachedReviews.removeIf(rev -> rev.getId().equals(Long.valueOf(reviewId)));
-                    cachedReviews.add(updatedReview);
-                    reviewCacheId.put(bookId, cachedReviews);
-                }
-
-                Book cachedBook = bookCacheId.get(bookId);
-                if (cachedBook != null) {
-                    if (cachedReviews == null) {
-                        cachedReviews = cachedBook.getReviews();
-                        cachedReviews.removeIf(rev -> rev.getId().equals(Long.valueOf(reviewId)));
-                        cachedReviews.add(updatedReview);
-                    }
-                    cachedBook.setReviews(cachedReviews);
-                    bookCacheId.put(bookId, cachedBook);
-                }
-
-                return updatedReview;
-            }
-        }
-
-        throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Review not found");
+        initialReview.setMessage(review.getMessage());
+        return reviewRepository.save(initialReview);
     }
 
     /** Function to delete review.
      *
      * @param reviewId id of the review
      */
+    @CacheEvict(value = {"reviews", "books"}, key = "#bookId")
     public void deleteReview(Integer reviewId, Long bookId) {
+        if (!bookRepository.existsById(bookId)) {
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE);
+        }
         reviewRepository.deleteById(reviewId);
-        List<Review> reviews = reviewCacheId.get(bookId);
-        if (reviews != null) {
-            reviews.removeIf(rev -> rev.getId().equals(Long.valueOf(reviewId)));
-            reviewCacheId.put(bookId, reviews);
-        }
-
-        Book book = bookCacheId.get(bookId);
-        if (book != null) {
-            if (reviews == null) {
-                reviews = book.getReviews();
-                reviews.removeIf(rev -> rev.getId().equals(Long.valueOf(reviewId)));
-            }
-            book.setReviews(reviews);
-            bookCacheId.put(bookId, book);
-        }
     }
 
     /** Function to get all reviews of the book.
@@ -134,16 +81,9 @@ public class ReviewService {
      * @param bookId id of the book
      * @return reviews of the book
      */
+    @Cacheable("reviews")
     public List<Review> getReviewsByBookId(Long bookId) {
-        List<Review> reviews = reviewCacheId.get(bookId);
-        if (reviews != null) {
-            return reviews;
-        }
-
-        reviews = reviewRepository.findByBookId(bookId);
-        reviewCacheId.put(bookId, reviews);
-
-        return reviews;
+        return reviewRepository.findByBookId(bookId);
     }
 
     /** Function to get all reviews from database.

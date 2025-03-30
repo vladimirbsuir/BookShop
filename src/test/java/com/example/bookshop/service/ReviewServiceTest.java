@@ -1,106 +1,133 @@
 package com.example.bookshop.service;
 
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.example.bookshop.controller.ReviewController;
-import com.example.bookshop.mapper.ReviewMapper;
+import com.example.bookshop.exception.ResourceNotFoundException;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.repository.ReviewRepository;
-import com.example.bookshop.utils.CacheUtil;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import java.util.List;
+import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.util.*;
-
+@ExtendWith(MockitoExtension.class)
 class ReviewServiceTest {
-
     @Mock
     private ReviewRepository reviewRepository;
 
     @Mock
-    private BookService bookService;
-
-    @Mock
-    private CacheUtil<Long, List<Review>> reviewCacheId;
-
-    @Mock
     private BookRepository bookRepository;
 
-    @Mock
-    private CacheUtil<Long, Book> bookCacheId;
-
-    @Mock
-    ReviewMapper reviewMapper;
-
-    @Mock
+    @InjectMocks
     private ReviewService reviewService;
 
-    @InjectMocks
-    ReviewController reviewController = new ReviewController(reviewService, reviewMapper);
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
-    void testCreateReview() {
-        Review review = new Review();
-        reviewController.createReview(1L, review);
-        verify(reviewService, times(1)).createReview(1L, review);
-    }
-
-    @Test
-    void testUpdateReview() {
-        Integer reviewId = 1;
+    void createReview_SaveReviewWithBook() {
         Long bookId = 1L;
-        Review review = new Review();
-        review.setMessage("Updated Review Message");
         Book book = new Book();
-        book.setId(bookId);
-        Review initialReview = new Review();
-        initialReview.setId(reviewId.longValue());
+        Review review = new Review();
 
-        when(bookService.findById(bookId)).thenReturn(book);
-        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(initialReview));
-        when(reviewRepository.save(initialReview)).thenReturn(initialReview);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(reviewRepository.save(review)).thenReturn(review);
 
-        Review result = reviewService.updateReview(reviewId, review, bookId);
+        reviewService.createReview(bookId, review);
 
-        assertNotNull(result);
-        assertEquals(review.getMessage(), result.getMessage());
-        verify(reviewCacheId, times(1)).put(bookId, anyList());
+        assertSame(book, review.getBook());
+        verify(reviewRepository).save(review);
     }
 
     @Test
-    void testDeleteReview() {
+    void createReview_ThrowWhenBookNotFound() {
+        Long bookId = 0L;
+        Review review = new Review();
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> reviewService.createReview(bookId, review));
+
+        assertEquals("Book not found", exception.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+    }
+
+    @Test
+    void updateReview_UpdateMessage() {
         Integer reviewId = 1;
         Long bookId = 1L;
+        Review existingReview = new Review();
+        existingReview.setMessage("Old message");
+        Review updateRequest = new Review();
+        updateRequest.setMessage("New message");
+
+        when(bookRepository.existsById(bookId)).thenReturn(true);
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+        when(reviewRepository.save(existingReview)).thenReturn(existingReview);
+
+        Review result = reviewService.updateReview(reviewId, updateRequest, bookId);
+
+        assertEquals("New message", result.getMessage());
+        verify(reviewRepository).save(existingReview);
+    }
+
+    @Test
+    void updateReview_ThrowWhenBookNotFound() {
+        Long bookId = 0L;
+        Review existingReview = new Review();
+        when(bookRepository.existsById(bookId)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> reviewService.updateReview(1, existingReview, bookId));
+    }
+
+    @Test
+    void deleteReview_CallDelete() {
+        Integer reviewId = 1;
+        Long bookId = 1L;
+        when(bookRepository.existsById(bookId)).thenReturn(true);
 
         reviewService.deleteReview(reviewId, bookId);
 
-        verify(reviewRepository, times(1)).deleteById(reviewId);
-        verify(reviewCacheId, times(1)).put(bookId, anyList());
+        verify(reviewRepository).deleteById(reviewId);
     }
 
     @Test
-    void testGetReviewsByBookId() {
+    void getReviewsByBookId_ReturnReviews() {
         Long bookId = 1L;
-        List<Review> reviews = Collections.singletonList(new Review());
-
-        when(reviewCacheId.get(bookId)).thenReturn(null);
+        List<Review> reviews = List.of(new Review(), new Review());
         when(reviewRepository.findByBookId(bookId)).thenReturn(reviews);
 
         List<Review> result = reviewService.getReviewsByBookId(bookId);
 
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(reviewCacheId, times(1)).put(bookId, reviews);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findAllReviews_ReturnAll() {
+        List<Review> reviews = List.of(new Review(), new Review());
+        when(reviewRepository.findAll()).thenReturn(reviews);
+
+        List<Review> result = reviewService.findAllReviews();
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void updateReview_ThrowWhenReviewNotFound() {
+        Integer reviewId = 0;
+        Long bookId = 1L;
+        Review review = new Review();
+        when(bookRepository.existsById(bookId)).thenReturn(true);
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> reviewService.updateReview(reviewId, review, bookId));
+
+        assertEquals("Review not found", exception.getMessage());
     }
 }

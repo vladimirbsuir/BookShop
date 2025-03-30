@@ -3,9 +3,7 @@ package com.example.bookshop.mapper;
 import com.example.bookshop.dto.AuthorDto;
 import com.example.bookshop.dto.BookDto;
 import com.example.bookshop.dto.ReviewDto;
-import com.example.bookshop.model.Author;
 import com.example.bookshop.model.Book;
-import com.example.bookshop.model.Review;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -45,31 +43,5 @@ public class BookMapper {
         }
 
         return bookDto;
-    }
-
-    /** Function to transform DTO to standard object.
-     *
-     * @param bookDto object of the BookDto class
-     * @return standard Book object
-     */
-    public Book toEntity(BookDto bookDto) {
-        Book book = new Book();
-        book.setTitle(bookDto.getTitle());
-
-        if (bookDto.getAuthors() != null) {
-            List<Author> authors = bookDto.getAuthors().stream()
-                    .map(authorMapper::toEntity)
-                    .toList();
-            book.setAuthors(authors);
-        }
-
-        if (bookDto.getReviews() != null) {
-            List<Review> reviews = bookDto.getReviews().stream()
-                    .map(reviewMapper::toEntity)
-                    .toList();
-            book.setReviews(reviews);
-        }
-
-        return book;
     }
 }
