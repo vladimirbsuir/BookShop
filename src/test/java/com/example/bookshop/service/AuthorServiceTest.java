@@ -184,4 +184,30 @@ class AuthorServiceTest {
         assertTrue(book.getAuthors().contains(existingAuthor));
         verify(authorRepository).save(existingAuthor);
     }
+
+    @Test
+    void delete_ThrowWhenBookNotFound() {
+        Long bookId = 0L;
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> authorService.delete(1L, bookId));
+
+        assertEquals("Book not found", exception.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+    }
+
+    @Test
+    void delete_ThrowWhenAuthorNotFound() {
+        Long authorId = 0L;
+        Long bookId = 1L;
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(new Book()));
+        when(authorRepository.findById(authorId)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> authorService.delete(authorId, bookId));
+
+        assertEquals("Author not found", exception.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+    }
 }

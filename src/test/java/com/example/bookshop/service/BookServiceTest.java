@@ -46,6 +46,46 @@ class BookServiceTest {
     }
 
     @Test
+    void save_SetBookForReviewsWhenReviewsExist() {
+        Book book = new Book();
+        book.setTitle("Book with Reviews");
+
+        Review review1 = new Review();
+        Review review2 = new Review();
+        book.setReviews(List.of(review1, review2));
+
+        when(bookRepository.save(book)).thenReturn(book);
+
+        bookService.save(book);
+
+        assertAll(
+                () -> assertEquals(book, review1.getBook()),
+                () -> assertEquals(book, review2.getBook())
+        );
+        verify(bookRepository).save(book);
+    }
+
+    @Test
+    void findByAuthorName_ReturnBooksForAuthor() {
+        String authorName = "Good man";
+        Book book1 = new Book();
+        book1.setTitle("Title1");
+        Book book2 = new Book();
+        book2.setTitle("Title 2");
+
+        when(bookRepository.findByAuthorName(authorName)).thenReturn(List.of(book1, book2));
+
+        List<Book> result = bookService.findByAuthorName(authorName);
+
+        assertAll(
+                () -> assertEquals(2, result.size()),
+                () -> assertTrue(result.contains(book1)),
+                () -> assertTrue(result.contains(book2))
+        );
+        verify(bookRepository).findByAuthorName(authorName);
+    }
+
+    @Test
     void testFindByReviewCount_ReturnsBook() {
         Long bookId = 1L;
         Book book = new Book();

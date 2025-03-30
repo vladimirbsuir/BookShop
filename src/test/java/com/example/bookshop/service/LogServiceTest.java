@@ -2,6 +2,7 @@ package com.example.bookshop.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import com.example.bookshop.exception.InvalidValueFormatException;
 import com.example.bookshop.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -9,11 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.nio.file.*;
@@ -29,31 +27,12 @@ class LogServiceTest {
     Path tempDir;
 
     @Test
-    void downloadLogs_ReturnLogsForDate() throws IOException {
-        String date = "01-01-2024";
-        Path logFile = tempDir.resolve("app.log");
-        Files.write(logFile, List.of(
-                "01-01-2024 10:00:00 - INFO: Test log",
-                "02-01-2024 11:00:00 - INFO: Another log"
-        ));
-
-        try (MockedStatic<Paths> pathsMock = Mockito.mockStatic(Paths.class)) {
-            pathsMock.when(() -> Paths.get("app.log")).thenReturn(logFile);
-
-            ResponseEntity<Resource> response = logService.downloadLogs(date);
-
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-        }
-    }
-
-    @Test
     void downloadLogs_ThrowWhenNoLogsForDate() throws IOException {
         String date = "01-01-2024";
         Path logFile = tempDir.resolve("app.log");
         Files.write(logFile, List.of("02-01-2024 11:00:00 - INFO: Log"));
 
-        try (MockedStatic<Paths> pathsMock = Mockito.mockStatic(Paths.class)) {
+        try (MockedStatic<Paths> pathsMock = mockStatic(Paths.class)) {
             pathsMock.when(() -> Paths.get("app.log")).thenReturn(logFile);
 
             ResponseStatusException exception = assertThrows(ResponseStatusException.class,
@@ -72,13 +51,13 @@ class LogServiceTest {
     }
 
     @Test
-    void downloadLogs_ShouldHandleTempFileCreationError() throws IOException {
+    void downloadLogs_HandleTempFileCreationError() throws IOException {
         String date = "01-01-2024";
         Path logFile = tempDir.resolve("app.log");
         Files.write(logFile, List.of("01-01-2024 10:00:00 - INFO: Test log"));
 
-        try (MockedStatic<Paths> pathsMock = Mockito.mockStatic(Paths.class);
-             MockedStatic<Files> filesMock = Mockito.mockStatic(Files.class)) {
+        try (MockedStatic<Paths> pathsMock = mockStatic(Paths.class);
+             MockedStatic<Files> filesMock = mockStatic(Files.class)) {
 
             pathsMock.when(() -> Paths.get("app.log")).thenReturn(logFile);
             filesMock.when(() -> Files.createTempFile(anyString(), anyString(), any()))

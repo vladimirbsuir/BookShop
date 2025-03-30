@@ -18,6 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReviewController.class)
@@ -100,5 +101,31 @@ class ReviewControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedReview)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void deleteReview_ValidRequest_ReturnsOk() throws Exception {
+        doNothing().when(reviewService).deleteReview(1, 1L);
+
+        mockMvc.perform(delete("/books/1/reviews/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void createReviews_ValidRequest_ReturnsReviews() throws Exception {
+        Review review1 = new Review();
+        Review review2 = new Review();
+        review1.setMessage("Good book!");
+        review2.setMessage("Nice to read");
+        List<Review> reviews = List.of(review1, review2);
+
+        when(reviewService.createReview(eq(1L), any(Review.class)))
+                .thenAnswer(inv -> inv.getArgument(1));
+
+        mockMvc.perform(post("/books/1/reviews/b")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reviews)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
     }
 }

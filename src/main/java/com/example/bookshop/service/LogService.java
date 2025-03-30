@@ -58,7 +58,7 @@ public class LogService {
             }
 
             FileAttribute<Set<PosixFilePermission>> attr =
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
+                        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
             Path logFile = Files.createTempFile("logs-" + logDate, ".log", attr);
 
             Files.write(logFile, currentLogs);
