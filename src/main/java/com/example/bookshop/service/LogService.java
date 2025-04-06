@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 /** Class to hold logic for operations with logs. */
 @Service
@@ -69,10 +68,10 @@ public class LogService {
     public ResponseEntity<Resource> downloadCreatedLogs(Long taskId) throws IOException {
         LogObj task = getStatus(taskId);
         if (task == null) {
-            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Task not found");
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Logs not found");
         }
         if (!"COMPLETED".equals(task.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Logs not ready");
+            throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Logs not ready");
         }
 
         Path path = Paths.get(task.getFilePath());

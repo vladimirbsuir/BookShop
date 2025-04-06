@@ -1,22 +1,18 @@
 package com.example.bookshop.service;
 
+import com.example.bookshop.exception.ResourceNotFoundException;
 import com.example.bookshop.model.LogObj;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
 import org.springframework.cache.Cache;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 /** Class to perform asynchronous actions with logs. */
 @Service
@@ -45,12 +41,10 @@ public class AsyncLogService {
                     .toList();
 
             if (currentLogs.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No logs for date: " + date);
+                throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "No logs for date: " + date);
             }
 
-            FileAttribute<Set<PosixFilePermission>> attr =
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
-            Path logFile = Files.createTempFile("logs-" + formattedDate, ".log", attr);
+            Path logFile = Files.createTempFile("logs-" + formattedDate, ".log");
             Files.write(logFile, currentLogs);
             logFile.toFile().deleteOnExit();
 
