@@ -20,6 +20,11 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.registerCustomCache("logTasks",
+                Caffeine.newBuilder()
+                        .maximumSize(100)
+                        .expireAfterWrite(1, TimeUnit.HOURS)
+                        .build());
         cacheManager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(20).expireAfterWrite(10, TimeUnit.MINUTES));
         return cacheManager;
