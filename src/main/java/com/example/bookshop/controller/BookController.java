@@ -54,10 +54,9 @@ public class BookController {
                             content = @Content(schema = @Schema(example =
                                     "{ \"error\": \"Internal server error\" }")))})
     @GetMapping
-    public BookDto getBooks(@Parameter(description = "Title of the book", example = "Java")
+    public Book getBooks(@Parameter(description = "Title of the book", example = "Java")
                                 @RequestParam(required = false) String title) {
-        Book books = bookService.findByTitle(title);
-        return bookMapper.toDto(books);
+        return bookService.findByTitle(title);
     }
 
     /** Function to get all books from database.
@@ -73,11 +72,8 @@ public class BookController {
                             content = @Content(schema = @Schema(example =
                                     "{ \"error\": \"Internal server error\" }")))})
     @GetMapping("/all")
-    public List<BookDto> getAllBooks() {
-        List<Book> books = bookService.findAllBooks();
-        return books.stream()
-                .map(bookMapper::toDto)
-                .toList();
+    public List<Book> getAllBooks() {
+        return bookService.findAllBooks();
     }
 
     /**Function that holds Get request and returns book with certain id.
@@ -98,10 +94,9 @@ public class BookController {
                             content = @Content(schema = @Schema(example =
                                     "{ \"error\": \"Internal server error\" }")))})
     @GetMapping("/{id}")
-    public BookDto getBookById(@Parameter(description = "Id of the book", example = "1", required = true)
+    public Book getBookById(@Parameter(description = "Id of the book", example = "1", required = true)
                                    @PathVariable @Min(1) Long id) {
-        Book book = bookService.findById(id);
-        return bookMapper.toDto(book);
+        return bookService.findById(id);
     }
 
     /** Function to get books with specified author.

@@ -59,6 +59,15 @@ public class AuthorService {
         return authorRepository.findAll();
     }
 
+    /** Function to get authors by name.
+     *
+     * @param name name of the author
+     * @return list of the authors
+     */
+    public List<Author> findByName(String name) {
+        return authorRepository.findByNameStartingWith(name);
+    }
+
     /** Function that save author in database.
      *
      * @param author объект класса Author
@@ -119,7 +128,7 @@ public class AuthorService {
         Author author = authorRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, ERROR_MESSAGE));
 
-        authors.remove(author);
+        authors.removeIf(a -> a.getId().equals(author.getId()));
 
         book.setAuthors(authors);
         bookService.update(bookId, book);

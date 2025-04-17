@@ -148,6 +148,17 @@ public class AuthorController {
         return authorService.findById(authorId, bookId);
     }
 
+    /** Function to get authors by name.
+     *
+     * @param name name of the authors
+     * @return list of the authors
+     */
+    @GetMapping("/name/{name}")
+    public List<Author> findByName(@Parameter(description = "name of the author", example = "1", required = true)
+                                             @PathVariable String name) {
+        return authorService.findByName(name);
+    }
+
     /** Function to get all authors from database.
      *
      * @return list of authors

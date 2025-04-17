@@ -1,7 +1,5 @@
 package com.example.bookshop.controller;
 
-import com.example.bookshop.dto.ReviewDto;
-import com.example.bookshop.mapper.ReviewMapper;
 import com.example.bookshop.model.Review;
 import com.example.bookshop.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,15 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Review requests", description = "CRUD operations for reviews")
 public class ReviewController {
     private final ReviewService reviewService;
-    private final ReviewMapper reviewMapper;
 
     /** Constructor of the class.
      *
      * @param reviewService - object of ReviewService class
      */
-    public ReviewController(ReviewService reviewService, ReviewMapper reviewMapper) {
+    public ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
-        this.reviewMapper = reviewMapper;
     }
 
     /** Function to add review to the book.
@@ -158,12 +154,9 @@ public class ReviewController {
                             content = @Content(schema = @Schema(example =
                                     "{ \"error\": \"Internal server error\" }")))})
     @GetMapping
-    public List<ReviewDto> getReviewsByBookId(
+    public List<Review> getReviewsByBookId(
             @Parameter(description = "id of the book", example = "1", required = true)
                                                   @PathVariable @Min(1) Long bookId) {
-        List<Review> reviews = reviewService.getReviewsByBookId(bookId);
-        return reviews.stream()
-                .map(reviewMapper::toDto)
-                .toList();
+        return reviewService.getReviewsByBookId(bookId);
     }
 }
